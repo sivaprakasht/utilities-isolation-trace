@@ -1,7 +1,8 @@
 define({
     root: ({
         map: {
-            error: "Unable to create map"
+            error: "Unable to create map",
+            mouseToolTip: "Select location to trace from"
         },
         geocoder: {
             defaultText: "Enter your address"

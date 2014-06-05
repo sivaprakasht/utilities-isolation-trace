@@ -19,7 +19,7 @@ define([], function () {
     //and url parameters.
     var defaults = {
         "appid": "",
-        "webmap": "067b19e4be4d4b04a6443a4fd47c86a3",
+        "webmap": "974a6b9bfc0244548e564cebafe10d30",
         "oauthappid": null, //"AFTKRmv16wj14N3z",
         //Group templates must support a group url parameter. This will contain the id of the group. 
         //group: "",
@@ -33,12 +33,12 @@ define([], function () {
         "bingMapsKey": "", //Enter the url to your organizations bing maps key if you want to use bing basemaps
         "sharinghost": location.protocol + "//" + "www.arcgis.com", //Defaults to arcgis.com. Set this value to your portal or organization host name. 
 
-        "geometryUrl": "http://54.214.169.132:6080/arcgis/rest/services/Utilities/Geometry/GeometryServer",
+        "geometryUrl": "http://localhost:6080/ArcGIS/rest/services/Geometry/GeometryServer",
 
-        "gpUrl": "http://54.214.169.132:6080/arcgis/rest/services/IsolationTrace/GPServer/IsolationTrace",
-
+        "gpUrl": "http://localhost:6080/arcgis/rest/services/WaterIsolationTrace/GPServer/IsolationTrace",
+       
         "highlighterDetails": {
-            "image": "/webtrace/images/ani/blueglow.gif",
+            "image": "/watertrace/images/ani/blueglow.gif",
             "height": 60,
             "width": 60,
             "timeout": 5000
@@ -51,14 +51,9 @@ define([], function () {
         "overviewDetails":
             {
                 "paramName": "Affected_Area",
-                "buttonText": "Summary",
-                "visible": "true",
-                "MinScale": 10000,
-                "MaxScale": 0,
                 "symbol":
                 {
-
-                    "type": "simplefillsymbol",
+                    "type": "esriSFS",
                     "style": "esriSFSNull",
                     "color": [0, 0, 0, 0],
                     "outline": {
@@ -68,6 +63,7 @@ define([], function () {
                         "width": 3
                     }
 
+
                 },
                 "saveOptions": {
                     "type": "layer",//csv or layer
@@ -76,30 +72,11 @@ define([], function () {
 
 
             },
-        "GPInputs": [
-            {
-                "paramName": "Flags",
-                "type": "Flag",
-
-            }, {
-                "paramName": "Barriers",
-                "type": "Barrier",
-
-            },
-            {
-                "paramName": "SkipLocations",
-                "type": "Skip",
-
-            }
-        ],
         "GPParams": [
                 {
                     "paramName": "Isolating_Valves",
-                    "buttonText": "Valves",
                     "summaryText": "{Count} Valves Returned in Trace, {SkipCount} were bypassed.",
                     "displayText": "{DIAMETER} inch Valve: {FACILITYID}",
-                    "MinScale": 10000,
-                    "MaxScale": 0,
                     "highlightSymbol":
                         {
 
@@ -121,7 +98,6 @@ define([], function () {
                     "bypassDetails":
                         {
                             "skipable": true,
-
                             "IDField": "FACILITYID"
                         },
                     "saveOptions": {
@@ -131,11 +107,9 @@ define([], function () {
                 },
                 {
                     "paramName": "Isolated_Hydrants",
-                    "buttonText": "Hydrants",
-                    "summaryText": "{Count} Hydrants would be affected by a shutdown in this area.",
+
+                    "summaryText": "{Count} Hydrants are affected by this outaged.",
                     "displayText": "{MANUFACTURER} Hydrant {FACILITYID}",
-                    "MinScale": 10000,
-                    "MaxScale": 0,
                     "highlightSymbol":
                         {
 
@@ -168,11 +142,9 @@ define([], function () {
                 },
                  {
                      "paramName": "Isolated_Customers",
-                     "buttonText": "Customers",
-                     "summaryText": "{Count} Customers would be affected by a shutdown in this area.",
+
+                     "summaryText": "{Count} Customers are affected by this outaged.",
                      "displayText": "Customer {FACILITYID}",
-                     "MinScale": 10000,
-                     "MaxScale": 0,
                      "highlightSymbol":
                         {
 

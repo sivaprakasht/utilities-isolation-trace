@@ -42,6 +42,7 @@ define([
      "esri/layers/FeatureLayer",
      "esri/symbols/TextSymbol",
      "esri/geometry/Multipoint",
+      "esri/geometry/Point",
      "esri/geometry/Extent",
      "dijit/layout/ContentPane",
      "dijit/form/Button",
@@ -52,10 +53,13 @@ define([
      "dijit/form/ToggleButton",
      "esri/InfoTemplate",
      "esri/tasks/query",
+     "dojo/_base/Color",
      "dojox/timing",
      "dojo/has",
      "dojo/dom-style",
      "dojo/_base/sniff"
+    
+
 
 ],
 function (
@@ -86,6 +90,7 @@ function (
     FeatureLayer,
     TextSymbol,
     Multipoint,
+    Point,
     Extent,
     ContentPane,
     Button,
@@ -96,6 +101,7 @@ function (
     ToggleButton,
     InfoTemplate,
     Query,
+    Color,
     Timing,
     Has,
     domStyle) {
@@ -107,8 +113,11 @@ function (
             // any url parameters and any application specific configuration information. 
             this.config = config;
             ready(lang.hitch(this, function () {
+                //supply either the webmap id or, if available, the item info 
+                var itemInfo = this.config.itemInfo || this.config.webmap;
                 this._initPage();
-                this._createWebMap();
+                this._createWebMap(itemInfo);
+
             }));
         },
         _mapLoaded: function () {
@@ -179,7 +188,7 @@ function (
 
                     if (GPInput.type == 'Barrier') {
                         this.config.BarrierParam = GPInput.paramName
-                       
+
                     }
                     else if (GPInput.type == 'Flag') {
                         this.config.FlagParam = GPInput.paramName
@@ -189,8 +198,8 @@ function (
                         this.config.SkipParam = GPInput.paramName
 
                     }
-                    
-                },this);
+
+                }, this);
             }
             if (this.config.BarrierParam == '') {
                 domStyle.set("tools.addBarrier", 'display', 'none');
@@ -234,10 +243,19 @@ function (
 
 
         },
-        _showHighlight: function (point) {
+        _getLineCenter: function (polyline) {
+            
+            var path = polyline.paths[Math.round(polyline.paths.length / 2) -1];
+            pointIndex = Math.round((path.length - 1) / 2) - 1;
+            startPoint = path[pointIndex];
+            endPoint = path[pointIndex + 1];
+            return new Point((startPoint[0] + endPoint[0]) / 2.0, (startPoint[1] + endPoint[1]) / 2.0, polyline.spatialReference);
+        },
+        _showHighlight: function (geometry) {
+
             this.aniLayer.clear();
             this.timer.stop();
-            var highightGraphic = new Graphic(point, null, null, null);
+            var highightGraphic = new Graphic(geometry, null, null, null);
             this.aniLayer.add(highightGraphic);
 
 
@@ -415,7 +433,7 @@ function (
                         if (this.defCount == 0) {
                             this._reset();
                             dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
-                            
+
 
                         }
                         alert(error.message);
@@ -436,8 +454,7 @@ function (
 
             }
 
-            else
-            {
+            else {
                 this._saveComplete();
             }
         },
@@ -540,43 +557,69 @@ function (
                 if (geocoder.url.indexOf(".arcgis.com/arcgis/rest/services/World/GeocodeServer") > -1) {
                     geocoder.placefinding = true;
                     geocoder.placeholder = this.config.i18n.geocoder.defaultText;
-                  
+
                 }
                 else {
-                    geocoder.suggest = true;
+                    //geocoder.suggest = true;
+                    //geocoder.placefinding = true;
                 }
                 //geocoder.searchExtent = this.map.extent;
             }, this);
 
             options = {
                 map: this.map,
-                autoNavigate: true,
+                autoNavigate: false,
                 autoComplete: true,
 
                 minCharacters: 0,
                 maxLocations: 5,
                 searchDelay: 100,
-                arcgisGeocoder: geocoders.splice(0, 1)[0],
+                arcgisGeocoder: false,//geocoders.splice(0, 1)[0],
                 geocoders: geocoders
 
             };
 
-       
+
             return options;
+        },
+        _results: function (evt) {
+
+            //this.map.graphics.clear();
+
+        },
+        _clear: function (evt) {
+            this.map.graphics.clear();
+
+        },
+        _showLocation: function (evt) {
+            this.map.graphics.clear();
+            var point = evt.result.feature.geometry;
+            //var symbol = new SimpleMarkerSymbol()
+            //symbol.setStyle("square")
+            //symbol.setColor(new Color([255, 0, 0, 0.5]));
+            //var graphic = new Graphic(point, symbol);
+            //this.map.graphics.add(graphic);
+            this.map.centerAt(point)
+            this.map.infoWindow.setTitle("Search Result");
+            this.map.infoWindow.setContent(evt.result.name);
+            this.map.infoWindow.show(evt.result.feature.geometry);
         },
         _createGeocoder: function () {
             var gcOpts = this._createGeocoderOptions();
             this.geocoder = new Geocoder(gcOpts, dojo.byId('searchDiv'));
-         
+            this.geocoder.on("select", lang.hitch(this, this._showLocation));
+            this.geocoder.on("clear", lang.hitch(this, this._clear));
+            this.geocoder.on("find-results", lang.hitch(this, this._results));
+
             this.geocoder.startup();
-           
-            
+
+
         },
         _extentChanged: function () {
             // each geocoder
-          
+
         },
-      
+
         _showAllResultLayers: function () {
             array.forEach(this.resultLayers, function (layer) {
                 layer.setVisibility(true);
@@ -865,8 +908,16 @@ function (
 
                 skipLoc.GPParam = selectedGPParam.paramName;
 
-                var bypassID = selectedGPParam.paramName + ":" + resultItem.attributes.OID + "BypassBtn";
-                var zoomToID = selectedGPParam.paramName + ":" + resultItem.attributes.OID + "ZoomToBtn";
+                var id;
+                if (resultItem.attributes.OID != null) {
+                    id = resultItem.attributes.OID
+                }
+                else if (resultItem.attributes.OBJECTID != null) {
+                    id = resultItem.attributes.OBJECTID
+                }
+
+                var bypassID = selectedGPParam.paramName + ":" + id + "BypassBtn";
+                var zoomToID = selectedGPParam.paramName + ":" + id + "ZoomToBtn";
 
                 resultItem.controlDetails = {
                     "bypassButtonID": bypassID,
@@ -969,10 +1020,15 @@ function (
         },
         _zoomToBtn: function (resultItem) {
             return function (e) {
+                if (resultItem.controlDetails.skipGraphic.geometry.type == "polyline") {
+                    geometry = this._getLineCenter(resultItem.controlDetails.skipGraphic.geometry)
+                }
+                else {
+                    geometry = resultItem.controlDetails.skipGraphic.geometry
+                }
+                this.map.centerAt(geometry);
 
-                this.map.centerAt(resultItem.controlDetails.skipGraphic.geometry);
-
-                this._showHighlight(resultItem.controlDetails.skipGraphic.geometry);
+                this._showHighlight(geometry);
 
             }
         },
@@ -1068,7 +1124,7 @@ function (
                 //params.SkipLocations = skipFeature;
                 params[this.config.SkipParam] = skipFeature;
             }
-          
+
             this.gp.submitJob(params);
 
         },
@@ -1103,8 +1159,7 @@ function (
                         this.resultsCnt = this.resultsCnt + 1;
                         this._processGPResults(message, this.resultOverviewLayer.id);
                     }
-                    else
-                    {
+                    else {
                         console.log("No overview param found or specified");
                     }
                 }
@@ -1227,13 +1282,11 @@ function (
 
             }
         },
-        _createGraphicFromJSON: function(json)
-        {
+        _createGraphicFromJSON: function (json) {
             //simplemarkersymbol | picturemarkersymbol | simplelinesymbol | cartographiclinesymbol | simplefillsymbol | picturefillsymbol | textsymbol
 
-            if (json.type == "simplefillsymbol" || json.type == "esriSFS")
-            {
-               return  new SimpleFillSymbol(json);
+            if (json.type == "simplefillsymbol" || json.type == "esriSFS") {
+                return new SimpleFillSymbol(json);
             }
             else if (json.type == "simplemarkersymbol" || json.type == "esriSMS") {
                 return new SimpleMarkerSymbol(json);
@@ -1241,7 +1294,7 @@ function (
             else if (json.type == "simplemlinesymbol" || json.type == "esriSLS") {
                 return new SimpleLineSymbol(json);
             }
-            
+
 
         },
 
@@ -1272,14 +1325,14 @@ function (
             var ovrSymbol = null;
             var ovrRen = null;
             if (this.config.overviewDetails.symbol != null) {
-              
+
                 ovrSymbol = this._createGraphicFromJSON(this.config.overviewDetails.symbol);
 
-               
+
                 ovrRen = new SimpleRenderer(ovrSymbol);
                 this.resultOverviewLayer.setRenderer(ovrRen);
             }
-    
+
 
 
             this.map.addLayer(this.resultOverviewLayer);

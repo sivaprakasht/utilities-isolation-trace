@@ -1,19 +1,3 @@
-/*
- | Copyright 2013 Esri
- |
- | Licensed under the Apache License, Version 2.0 (the "License");
- | you may not use this file except in compliance with the License.
- | You may obtain a copy of the License at
- |
- |    http://www.apache.org/licenses/LICENSE-2.0
- |
- | Unless required by applicable law or agreed to in writing, software
- | distributed under the License is distributed on an "AS IS" BASIS,
- | WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- | See the License for the specific language governing permissions and
- | limitations under the License.
- */
-
 define(
 [
   "dojo/_base/lang",
@@ -31,7 +15,7 @@ function(lang, dojoJson, Url, cookie, Deferred, ioquery, idManager) {
             /**
              * parameters = {
              *   appId:       "<String>",
-             *   portal:      "<String>", // deafult is "http://www.arcgis.com"
+             *   portal:      "<String>", // default is "http://www.arcgis.com"
              *   expiration:   <Number> // in minutes
              * }
              */
@@ -100,14 +84,14 @@ function(lang, dojoJson, Url, cookie, Deferred, ioquery, idManager) {
                         if (document.domain === "localhost") {
                             // Do not include the domain because "localhost" won't work. See http://stackoverflow.com/a/489465
                             cookie("arcgis_auth", dojoJson.toJson(oauthResponse), {
-                                expires: new Date(oauthResponse.expires_at),
+                               // expires: new Date(oauthResponse.expires_at),
                                 path: "/"
                             });
                         }
                         else {
                             // Include the domain
                             cookie("arcgis_auth", dojoJson.toJson(oauthResponse), {
-                                expires: new Date(oauthResponse.expires_at),
+                                //expires: new Date(oauthResponse.expires_at),
                                 path: "/",
                                 domain: document.domain
                             });

@@ -1,3 +1,20 @@
+/*
+ | Copyright 2014 Esri
+ |
+ | Licensed under the Apache License, Version 2.0 (the "License");
+ | you may not use this file except in compliance with the License.
+ | You may obtain a copy of the License at
+ |
+ |    http://www.apache.org/licenses/LICENSE-2.0
+ |
+ | Unless required by applicable law or agreed to in writing, software
+ | distributed under the License is distributed on an "AS IS" BASIS,
+ | WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ | See the License for the specific language governing permissions and
+ | limitations under the License.
+ */
+
+
 define([
     "dojo/Evented",
     "dojo/parser",
@@ -75,15 +92,15 @@ define([
 
                 this._getLocalization()
                     .then(lang.hitch(this, this._queryApplicationConfiguration))
-                    .then(lang.hitch(this,this._queryDisplayItem))
-                    .then(lang.hitch(this,this._queryOrganizationInformation))
-                    .then(lang.hitch(this, function(){
+                    .then(lang.hitch(this, this._queryDisplayItem))
+                    .then(lang.hitch(this, this._queryOrganizationInformation))
+                    .then(lang.hitch(this, function () {
 
-         
+
                         //Now that we have the org and app settings do the mixins. First overwrite the defaults 
                         //with the application settings then apply org settings if required
                         lang.mixin(this.config, this.appConfig);
-                        if(this.config.queryForOrg !== false){
+                        if (this.config.queryForOrg !== false) {
                             lang.mixin(this.config, this.orgConfig);
                         }
                         //Set the geometry helper service to be the app default.  
@@ -126,7 +143,7 @@ define([
             },
 
             _initializeApplication: function () {
-       
+
                 //Check to see if the app is hosted or a portal. If the app is hosted or a portal set the
                 // sharing url and the proxy. Otherwise use the sharing url set it to arcgis.com. 
                 //We know app is hosted (or portal) if it has /apps/ or /home/ in the url. 
@@ -255,7 +272,7 @@ define([
                             //Get the web map from the app values. But if there's a web url
                             //parameter don't overwrite with the app value. 
                             var webmapParam = this._createUrlParamsObject(["webmap"]);
-                            if(!esriLang.isDefined(webmapParam.webmap) && response.itemData.values.webmap && this.config.webmap){
+                            if (!esriLang.isDefined(webmapParam.webmap) && response.itemData.values.webmap && this.config.webmap) {
                                 this.config.webmap = response.itemData.values.webmap;
                             }
                         }
@@ -290,7 +307,7 @@ define([
                         this.orgConfig.units = response.user.units;
                     } else if (response.units) { //org level units 
                         this.orgConfig.units = response.units;
-                    } else if ((response.user && response.user.region && response.user.region === "US") || (response.user && !response.user.region && response.region === "US") || (response.user && !response.user.region && !response.region) || (!response.user && response.ipCntryCode === "US") || (!response.user && !response.ipCntryCode && kernel.locale === "en-us")){
+                    } else if ((response.user && response.user.region && response.user.region === "US") || (response.user && !response.user.region && response.region === "US") || (response.user && !response.user.region && !response.region) || (!response.user && response.ipCntryCode === "US") || (!response.user && !response.ipCntryCode && kernel.locale === "en-us")) {
                         // use feet/miles only for the US and if nothing is set for a user
                         this.orgConfig.units = "english";
                     }
@@ -300,13 +317,13 @@ define([
 
 
                     //are any custom roles defined in the organization? 
-                    if(response.user && esriLang.isDefined(response.user.roleId)){
-                        if(response.user.privileges){
-                          this.orgConfig.userPrivileges = response.user.privileges;
+                    if (response.user && esriLang.isDefined(response.user.roleId)) {
+                        if (response.user.privileges) {
+                            this.orgConfig.userPrivileges = response.user.privileges;
                         }
                     }
 
-            
+
                     deferred.resolve();
                 }), function (error) {
                     console.log(error);

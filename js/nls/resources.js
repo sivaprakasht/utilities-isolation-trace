@@ -11,20 +11,22 @@ define({
             saveToLayerMissing: "Save To layer is not present in the webmap"
 
         },
-       
+
         page:
             {
-            title: "Trace App",
-            bypass:"Skip this asset"
+                title: "Trace App",
+                bypass: "Skip this asset"
 
 
-        }
-        ,
+            },
         gp:
             {
                 failed: "The trace could not be completed, please try again.",
                 downloadFileName: "results"
-            }
+            },
+        ui: {
+            basemapButton: "Basemap"
+        }
 
     }),
     "fr": 1

@@ -1,439 +1,53 @@
-
-.dojoxGrid table {
-    margin: 0;
-}
-
-.dojoxGrid {
-    width: 45em;
-    height: 20em;
-}
-
-html, body {
+html,
+body {
     padding: 0;
     margin: 0;
     height: 100%;
     width: 100%;
-    font-family: Arial,Helvetica,sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }
-
 #mapDiv {
     padding: 0;
     margin: 0;
     width: 100%;
     height: 100%;
 }
-
-#searchDiv {
-    display: block;
-    position: absolute;
-    z-index: 3;
-    top: 20px;
-    left: 75px;
-    width: 60%;
-}
-
-.LocateButton .zoomLocateButton {
-    background-image: url("../images/locate_dark.png");
-    background-color: #ffffff;
-    border: 2px solid #666;
-    width: 26px;
-    height: 26px;
-    position: absolute;
-    top: 95px;
-    left: 20px;
-    z-index: 50;
-}
-
-
-/* customize geocoder appearance */
-.simpleGeocoder, .simpleGeocoder .esriGeocoderContainer {
-    width: 100%;
-}
-
-    .simpleGeocoder .esriGeocoder {
-        height: 100%;
-    }
-
-         .simpleGeocoder .esriGeocoder input {
-            
-            /* Firefox */
-            width: -moz-calc(100% - 75px);
-            /* WebKit */
-            width: -webkit-calc(100% - 75px);
-            /* Opera */
-            width: -o-calc(100% - 75px);
-            /* Standard */
-            width: calc(100% - 75px);
-            padding-right:0px;
-            margin-right:0px;
-
-        }
-
-
-    .simpleGeocoder .esriGeocoderResult:hover,
-    .simpleGeocoder .esriGeocoderResultEven:focus,
-    .simpleGeocoder .esriGeocoderResultOdd:focus {
-        /* default is #EDEDED, use a light blue instead */
-        background-color: #B5DAEA;
-    }
-
-
 .esriRTL label {
-    /*Example of a rule that will be applied if the app is viewed in a browser wtih a RTL locale like Hebrew or Arabic.*/
+    /*Example of a rule that will be applied if the app is viewed in a browser with a RTL locale like Hebrew or Arabic.*/
 }
-
-
-.appLayout {
-    height: 100%;
-}
-
-/*.claro .dijitTabContainerTop-dijitContentPane {
-    background-color: #666;
-    background-color: rgba(102,102,102,0.80);
-    color: #ffffff;
-    font-size: 32pt;
-    
-    text-align: center;
- overflow:hidden;
-}*/
-
-/*.claro .dijitChecked.dijitTab .tabLabel {
-  
-}
-.claro .dijitTabChecked {
-      background-color: yellow !important;
-      -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    outline: 0;
-}
-.claro .dijitTabContainerTop-tabs .dijitTabChecked {
-    background-image: -moz-linear-gradient(center top , #FFFFFF 0px, #FFFFFF 1px, rgba(255, 255, 255, 0) 2px, #FFFFFF 19px) !important;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    outline: 0;
-}*/
-.claro .edgePanelBottom {
-    background-color: #000000;
-    filter: alpha(opacity=70);
-    -moz-opacity: 0.70;
-    -khtml-opacity: 0.70;
-    opacity: 0.70;
-    height: 210px;
-    /*display: none;*/
-    overflow: hidden;
-}
-
-.claro .edgePanelTop {
-    background-color: #000000;
-    filter: alpha(opacity=70);
-    -moz-opacity: 0.70;
-    -khtml-opacity: 0.70;
-    opacity: 0.70;
-    background-color: #000000;
-    color: #ffffff;
-    height: 50px;
-}
-
-.claro .edgePanelCenter {
-    background-color: #000000;
-    color: #000000;
-    padding: 0;
-    margin: 0;
-}
-
-.claro .edgePanelLeft {
-    background-color: #000000;
-    color: #ffffff;
-}
-
-.claro .searchPanelCenter {
-    background-color: #000000;
-    color: #ffffff;
-    padding: 0;
-    margin: 0;
-    overflow: hidden;
-}
-
-.claro .searchPanelLeft {
-    background-color: #000000;
-    color: #ffffff;
-    width: 10em;
-    overflow: hidden;
-}
-
-.panelBreak {
-    position: relative;
-    /*	height: auto; */
-    width: 10px;
-    float: left;
-    display: block;
-    background: url("images/break.png") no-repeat;
-}
-
-.claro .dijitTabContainer {
-    position: relative;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    float: left;
-    display: inline;
-    margin-top: 2px;
-    margin-bottom: 2px;
-    padding: 0px;
-    font-size: 14pt;
-}
-
-.claro .resultItem {
-    width: 100%;
-    line-height: 45px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    cursor: pointer;
-    outline: none;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-image: none;
-    _background-image: none;
-    border: 0px;
-}
-
-.claro .resultPane {
-    font-size: 12pt;
-    height: 80%;
-    width: 100%;
-    margin-top: 2px;
-    margin-bottom: 4px;
-    padding: 0px;
-    color: #ffffff;
-    border-width: 2px;
-    border-style: solid;
-    border-color: rgba(102,102,102,0.80);
-    border-radius: 2px 2px 2px 2px;
-    -moz-border-radius: 2px 2px 2px 2px;
-}
-
-.panelInfo {
-    position: relative;
-    font-size: 12pt;
-    color: #ffffff;
-}
-
-.panelInfoLabel {
-    position: relative;
-    font-size: 18pt;
-    color: #ffffff;
-    float: left;
-}
-
-.claro .resultsPanelLeft {
-    background-color: #000000;
-    color: #ffffff;
-    width: 20em;
-}
-
-
-.claro .resultsPanelCenter {
-    background-color: #000000;
-    color: #ffffff;
-    width: 20em;
-}
-
-
-.userControls {
-    border-radius: 4px;
-    -moz-border-radius: 4px 4px 4px 4px;
-    padding: 2px 8px 4px 8px;
-}
-
-
-
-#loader {
-    position: absolute;
-    /*background: url("./images/preloader.gif") no-repeat;*/
-    z-index: 250;
-    width: 65px;
-    height: 50px;
-    left: 50%;
-    top: 50%;
+.loading-indicator {
+    /* Loading status */
     display: none;
+    height: 100%;
+    width: 100%;
+    z-index: 500;
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    background: #fff;
 }
-
-.claro * {
-    outline: none;
+.app-loading .loading-indicator,
+.app-error .loading-indicator {
+    /* Show this class when loading or error */
+    display: block;
 }
-/*.claro .dijitButtonActive , .claro .dijitDropDownButtonActive , .claro .dijitComboButtonActive , .claro .dijitToggleButtonActive , .claro .dijitToggleButtonChecked  {
-border: 1px solid #759dc0;
-     border-radius: 4px;
-    -moz-border-radius: 4px 4px 4px 4px;
-padding: 2px 4px 4px 4px;
-color: #ffffff;
--moz-border-radius: 1px;
-border-radius: 1px;
--webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
--moz-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
-background-color:  rgba(102,102,102,0.80);
-background-image: none;
-background-image: -moz-linear-gradient(#D3D3D3 0px, rgba(211, 211, 211, 0) 1px, rgba(211, 211, 211, 0.75) 100%);
-background-image: -webkit-linear-gradient(#D3D3D3 0px, rgba(211, 211, 211, 0) 1px, rgba(211, 211, 211, 0.75) 100%);
-background-image: -o-linear-gradient(#D3D3D3 0px, rgba(211, 211, 211, 0) 1px, rgba(211, 211, 211, 0.75) 100%);
-background-image: linear-gradient(#D3D3D3 0px, rgba(211, 211, 211, 0) 1px, rgba(211, 211, 211, 0.75) 100%);
-_background-image: none;
- -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
-.claro .dijitButton .dijitButtonNode, .claro .dijitDropDownButton .dijitButtonNode, .claro .dijitComboButton .dijitButtonNode, .claro .dijitToggleButton .dijitButtonNode {
-border: 1px solid #759dc0;
-padding: 2px 4px 4px 4px;
-color: #ffffff;
--moz-border-radius: 1px;
-border-radius: 1px;
--webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
--moz-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
-background-color:  rgba(102,102,102,0.80);
-background-image: none;
-background-image: -moz-linear-gradient(#D3D3D3 0px, rgba(211, 211, 211, 0) 1x, rgba(211, 211, 211, 0.75) 100%);
-background-image: -webkit-linear-gradient(#D3D3D3 0px, rgba(211, 211, 211, 0) 1px, rgba(211, 211, 211, 0.75) 100%);
-background-image: -o-linear-gradient(#ffffff 0px, rgba(211, 211, 211, 0) 1px, rgba(211, 211, 211, 0.75) 100%);
-background-image: linear-gradient(#ffffff 0px, rgba(211, 211, 211, 0) 1px, rgba(211, 211, 211, 0.75) 100%);
-_background-image: none;
- -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}*/
-
-
-.customBigIcon {
-    width: 40px;
-    height: 40px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    cursor: pointer;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    -o-border-radius: 5px;
-    border-radius: 5px;
-    outline: none;
+.app-loading .loading-indicator {
+    /* Loading image */
     background-position: center center;
+    background-image: url(../images/ajax-loader.gif);
     background-repeat: no-repeat;
 }
-/*claro .dijitButton .dijitButtonNode, .claro .dijitDropDownButton .dijitButtonNode, .claro .dijitComboButton .dijitButtonNode, .claro .dijitToggleButton .dijitButtonNode {
-border:0px;
-padding: 0px 0px 0px 0px;
-background-image: none;
-background-image: none;
-background-image: none;
-background-image: none;
-_background-image: none;
-}*/
-.resultItemButton {
-    padding: 0px;
-    width: 40px;
-    height: 40px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    cursor: pointer;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    -o-border-radius: 5px;
-    border-radius: 5px;
-    outline: none;
-    background-position: center center;
+.app-error .loading-message {
+    /* Error status */
+    background-position: top center;
+    background-image: url(../images/error.png);
     background-repeat: no-repeat;
-    outline: none;
-    border: 0px;
-    margin-left: 5px;
-    margin-right: 5px;
-}
-
-.claro .dijitButtonNode {
-    outline: none;
-    border: 0px;
-}
-
-.resultItemButtonSkipIcon {
-    background-image: url("../images/skip.png");
-    background-color: rgba(102,102,102,0.80);
-}
-
-.resultItemButtonSkipIconSelected {
-    background-image: url("../images/skip.png");
-    background-color: rgba(255,0,0,0.80);
-}
-
-.resultItemButtonZoomIcon {
-    background-image: url("../images/ZoomTo.png");
-    background-color: rgba(102,102,102,0.80);
-}
-
-.resultItemButtonZoomIconSelected {
-    background-image: url("../images/ZoomTo.png");
-    background-color: rgba(255,0,0,0.80);
-}
-
-.resultItemLabel {
-    padding-left: 10px;
-}
-/*background-image: -moz-linear-gradient(#ffffff 0px, rgba(255, 255, 255, 0) 3px, rgba(255, 255, 255, 0.75) 100%);
-background-image: -webkit-linear-gradient(#ffffff 0px, rgba(255, 255, 255, 0) 3px, rgba(255, 255, 255, 0.75) 100%);
-background-image: -o-linear-gradient(#ffffff 0px, rgba(255, 255, 255, 0) 3px, rgba(255, 255, 255, 0.75) 100%);
-background-image: linear-gradient(#ffffff 0px, rgba(255, 255, 255, 0) 3px, rgba(255, 255, 255, 0.75) 100%);*/
-.flagIcon {
-    background-image: url("../images/flag.png");
-    background-color: rgba(102,102,102,0.80);
-}
-
-.flagIconSelected {
-    background-image: url("../images/flag.png");
-    background-color: rgba(255,0,0,0.80);
-}
-
-.barrierIcon {
-    background-image: url("../images/barrier.png");
-    background-color: rgba(102,102,102,0.80);
-}
-
-.barrierIconSelected {
-    background-image: url("../images/barrier.png");
-    background-color: rgba(255,0,0,0.80);
-}
-
-.clearIcon {
-    background-image: url("../images/erase.png");
-    background-color: rgba(102,102,102,0.80);
-}
-
-.traceIcon {
-    background-image: url("../images/trace.png");
-    background-color: rgba(102,102,102,0.80);
-}
-
-.traceIconProcessing {
-    background-image: url("../images/loader.gif");
-    background-color: rgba(102,102,102,0.80);
-}
-
-.saveIcon {
-    background-image: url("../images/save.png");
-    background-color: rgba(102,102,102,0.80);
-}
-
-.saveIconProcessing {
-    background-image: url("../images/loader.gif");
-    background-color: rgba(102,102,102,0.80);
+    padding-top: 60px;
+    width: 100%;
+    position: absolute;
+    z-index: 2;
+    top: 40%;
+    left: 0;
+    text-align: center;
 }

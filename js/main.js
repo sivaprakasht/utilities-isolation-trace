@@ -91,7 +91,10 @@ define([
                 this.common.addBaseMapGallery("basemapDiv");
 
 
-                this.GPTools = new GPTools(this.map, this.config, this.layers);
+                this.GPTools = new GPTools(this.map, this.config, this.layers, this.agolPopupClickHandle, this.agolPopupclickEventListener);
+
+                this.GPTools.on("show-busy", lang.hitch(this, this._showBusyIndicator));
+                this.GPTools.on("hide-busy", lang.hitch(this, this._hideBusyIndicator));
                 this.GPTools.startup();
 
                 this.eventAction = new EventAction(this.map, this.config, this.layers);
@@ -152,7 +155,8 @@ define([
                 // console.log(this.config);
                 this.map = response.map;
 
-                this.handler = response.clickEventHandle;
+                this.agolPopupClickHandle = response.clickEventHandle;
+                this.agolPopupclickEventListener = response.clickEventListener;
 
                 //Added for the service lookup
                 this.layers = response.itemInfo.itemData.operationalLayers;

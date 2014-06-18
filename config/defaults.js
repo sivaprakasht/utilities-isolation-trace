@@ -157,10 +157,6 @@ define([], function () {
                   "visible": "true",
                   "MinScale": 10000,
                   "MaxScale": 0,
-                  "saveOptions": {
-                      "type": "layer",
-                      "name": "Outage Area"
-                  },
                   "symbol": {
                       "type": "simplefillsymbol",
                       "style": "esriSFSNull",
@@ -181,6 +177,10 @@ define([], function () {
                           ],
                           "width": 3
                       }
+                  },
+                  "saveOptions": {
+                      "type": "layer",
+                      "name": "Outage Area"
                   }
               },
               {
@@ -259,7 +259,7 @@ define([], function () {
                       "IDField": ""
                   },
                   "saveOptions": {
-                      "type": "Layer",
+                      "type": "csv",
                       "name": "Isolated Hydrants"
                   }
               },
@@ -299,7 +299,7 @@ define([], function () {
                       "IDField": ""
                   },
                   "saveOptions": {
-                      "type": "layer",
+                      "type": "csv",
                       "name": "Isolated Customers"
                   }
               }

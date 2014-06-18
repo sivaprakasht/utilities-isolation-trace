@@ -1,3 +1,4 @@
+/// <reference path="mainMine.js" />
 /*
  | Copyright 2014 Esri
  |
@@ -1442,7 +1443,7 @@ function (
                     dateFlds.push(index);
 
                 }
-                atts.push(field["alias"]);
+                atts.push(field["alias"]); csvNewLineChar
             }
            , this);
 

@@ -106,13 +106,24 @@ function (
             }
             return point;
         },
-        layerFieldToAttributes: function (fields) {
-            var attributes = {};
-            dojo.forEach(fields, function (field) {
-                attributes[field.name] = null;
+
+        layerFieldsToFieldInfos: function (layer) {
+            fieldInfo = null;
+            if (layer.popupInfo != null) {
+                if (layer.popupInfo.fieldInfos != null) {
+                    fieldInfo = layer.popupInfo.fieldInfos;
+                }
+            }
+            if (fieldInfo == null) {
+                fieldInfo = array.map(layer.layerObject.fields, function (field) {
+                    return { 'fieldName': field.name, 'isEditable': field.editable, 'tooltip': field.alias, 'label': field.alias };
+                });
+            }
+          
+            return array.filter(fieldInfo, function (field) {
+                return field.visible;
             });
-            return attributes;
-        }
+        },
     });
 
 });

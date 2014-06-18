@@ -25,7 +25,8 @@ define({
                 downloadFileName: "results"
             },
         ui: {
-            basemapButton: "Basemap"
+            basemapButton: "Basemap",
+            saveButton: "Save"
         }
 
     }),

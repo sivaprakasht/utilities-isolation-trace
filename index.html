@@ -34,6 +34,7 @@
     <!--Load any application specific styles-->
     <link rel="stylesheet" href="css/app.css">
     <link rel="stylesheet" href="css/gptools.css">
+    <!--<link rel="stylesheet" href="css/editorPopup.css">-->
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel="stylesheet" href="css/common.css">
 </head>
@@ -126,7 +127,8 @@
             "dijit/form/Button",
             "dijit/form/TextBox",
             "dijit/Toolbar",
-            "dojo/domReady!"
+            "dojo/domReady!",
+
         ], function (
             templateConfig,
             Template,
@@ -134,6 +136,7 @@
             parser) {
             parser.parse();
             dojo.addOnLoad(pageReady);
+
             function pageReady() {
                 esri.config.defaults.io.corsEnabledServers.push("localhost");
 

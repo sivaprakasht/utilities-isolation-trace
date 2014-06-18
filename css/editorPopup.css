@@ -1,0 +1,13 @@
+﻿.esriPopup .maximize.titleButton {
+    display: none;
+}
+.esriPopup .titleButton {
+    display: none;
+}
+.esriPopup .close.titleButton {
+display: none;
+}
+
+.esriPopup .hidden {
+    display: none;
+}

@@ -10,6 +10,9 @@
     "dojo/on",
     "dojo/dom-prop",
     "dojo/dom-construct",
+    "dojo/has",
+    "dojo/promise/all",
+    "dojo/Deferred",
     "esri/graphic",
     "esri/symbols/SimpleMarkerSymbol",
     "esri/layers/GraphicsLayer",
@@ -40,6 +43,9 @@
     on,
     domProp,
     domConstruct,
+    has,
+    all,
+    Deferred,
     Graphic,
     SimpleMarkerSymbol,
     GraphicsLayer,
@@ -66,10 +72,14 @@
         pointLayer: null,
         toolbar: null,
         gp: null,
-        constructor: function (map, config, layers) {
+        handler: null,
+        constructor: function (map, config, layers, agolPopupClickHandle, agolPopupclickEventListener) {
             this.map = map;
             this.config = config;
             this.layers = layers;
+
+            this.agolPopupClickHandle = agolPopupClickHandle;
+            this.agolPopupclickEventListener = agolPopupclickEventListener;
             this.functions = new Functions();
 
         },
@@ -121,9 +131,9 @@
             if (this.overviewInfo != null) {
                 if (this.overviewInfo.saveOptions != null) {
                     if (this.overviewInfo.saveOptions.saveToLayer != null) {
-                        this.editPopup = new EditPopup(this.map, this.config, this.overviewInfo.saveOptions.saveToLayer, this.handler);
-                        //this.editPopup.on("popup-started", lang.hitch(this, this._showBusyIndicator));
-                        //this.editPopup.on("popup-complete", lang.hitch(this, this._hideBusyIndicator));
+                        this.editPopup = new EditPopup(this.map, this.config, this.overviewInfo.saveOptions.saveToLayer, this.agolPopupClickHandle, this.agolPopupclickEventListener);
+                        this.editPopup.on("saving", lang.hitch(this, this._showBusyIndicator));
+                        this.editPopup.on("save-complete", lang.hitch(this, this._overviewSaved));
                         this.editPopup.startup();
                         //this.editPopup.activateEditor();
                     }
@@ -161,7 +171,137 @@
             });
 
         },
+        _showBusyIndicator: function () {
+            this.emit("show-busy", { "Name": "gptools" });
+        },
+        _hideBusyIndicator: function () {
+            this.emit("hide-busy", { "Name": "gptools" });
+        },
+        _overviewSaved: function (info) {
+            if ('error' in info) {
+                alert(info.error);
+            }
+            else if (info.type == "Updated") {
+                defs = [];
 
+                array.forEach(this.config.geoprocessing.outputs, function (output) {
+                    if (output.type != "Overview") {
+                        if (output.results != null && output.saveOptions.type) {
+                            if (output.results.features != null) {
+                                if (output.results.features.length > 0) {
+                                    if (output.saveOptions.type.toUpperCase() == "Layer".toUpperCase()) {
+                                        if (output.saveOptions.saveToLayer != null) {
+                                            defs.push(output.saveOptions.saveToLayer.layerObject.applyEdits(output.results.features, null, null).promise);
+                                        }
+                                    }
+                                    else if (output.saveOptions.type.toUpperCase() == "csv".toUpperCase()) {
+                                        defs.push(this._createCSVContent(output.results.features, output.saveOptions.name).promise);
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }, this);
+                all(defs).then(lang.hitch(this, function (results) {
+
+                    array.forEach(results, function (result) {
+                        if ('csvdata' in result) {
+                            this.csvData = this.csvData == "" ? result['csvdata'] : this.csvData + result['csvdata'];
+                        }
+                    }, this);
+
+                    this._saveComplete();
+                }));
+            }
+            else if (info.type == "Added") {
+                this._hideBusyIndicator();
+            }
+        },
+        _saveComplete: function () {
+
+            if (this.csvData != "") {
+
+                if (has("ie") >= 10) {
+                    var blob = new Blob([this.csvData], {
+                        type: "text/csv;charset=utf-8;",
+                    });
+                    window.navigator.msSaveBlob(blob, this.config.i18n.gp.downloadFileName + ".csv");
+
+                }
+                else if (has("chrome") > 14) {
+                    var csvContent = "data:text/csv;charset=utf-8," + this.csvData;
+
+                    var encodedUri = encodeURI(csvContent);
+                    var link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", this.config.i18n.gp.downloadFileName + ".csv");
+
+                    link.click(); // This will download the data file named "my_data.csv"
+
+                }
+                else {
+                    dojo.byId("reportinput").value = this.csvData;
+                    var f = dojo.byId("downloadform");
+                    f.submit();
+                }
+
+            }
+            this._reset();
+            dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
+            this._hideBusyIndicator();
+
+        },
+        _createCSVContent: function (features, title) {
+            var deferred = new Deferred();
+
+            setTimeout(function () {
+                var csvNewLineChar = "\r\n";
+                var csvContent = title + csvNewLineChar + csvNewLineChar;
+
+
+                var atts = [];
+                var dateFlds = []
+                array.forEach(features.fields, function (field, index) {
+
+                    if (field.type == "esriFieldTypeDate") {
+                        dateFlds.push(index);
+
+                    }
+                    atts.push(field["alias"]);
+                }
+               , this);
+
+
+                csvContent += atts.join(",") + csvNewLineChar;
+                array.forEach(features, function (feature, index) {
+                    atts = [];
+                    var idx = 0;
+
+                    for (var k in feature.attributes) {
+
+                        if (feature.attributes.hasOwnProperty(k)) {
+                            if (dateFlds.indexOf(idx) >= 0) {
+                                atts.push('"' + this._formatDate(feature.attributes[k]) + '"');
+                            }
+                            else {
+                                atts.push('"' + feature.attributes[k] + '"');
+                            }
+                        }
+                        idx = idx + 1;
+                    }
+
+
+                    dataLine = atts.join(",");
+
+                    csvContent += dataLine + csvNewLineChar + csvNewLineChar + csvNewLineChar;
+                }, this);
+
+                deferred.resolve({ "csvdata": csvContent });
+            }, 1000);
+
+            return deferred;
+        },
         _createGPResults: function () {
             this.sc = new StackContainer({
                 class: "resultPane",
@@ -259,7 +399,6 @@
 
             this.map.addLayers(this.gpInputDetails);
         },
-
         _showAllResultLayers: function () {
             array.forEach(this.resultLayers, function (layer) {
                 layer.setVisibility(true);
@@ -294,135 +433,36 @@
             this._toggleControls("false");
             this._GPExecute();
         },
-
         _saveTool: function () {
-            this._toggleControls("false");
-            dijit.byId("tools.save").set("iconClass", "customBigIcon saveIconProcessing");
+            if (domProp.get(dijit.byId("tools.save"), "iconClass") == "customBigIcon saveDisabledIcon") {
+                return;
+            }
+            if (domProp.get(dijit.byId("tools.save"), "iconClass") == "customBigIcon saveIconProcessing") {
+                return;
+            }
+
             if (this.overviewInfo.results != null) {
                 if (this.overviewInfo.results.features != null) {
                     if (this.overviewInfo.results.features.length > 0) {
-                        var newfeat = this.editPopup.createFeature(this.overviewInfo.results.features[0].geometry);
+                        this._toggleControls("false");
+                        dijit.byId("tools.save").set("iconClass", "customBigIcon saveIconProcessing");
+                        var newfeat = this.editPopup.newFeature(this.overviewInfo.results.features[0].geometry);
                         this.editPopup.addFeature(newfeat);
-
+                        dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
+                    } else {
+                        dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
                     }
+
+                } else {
+                    dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
                 }
+            }
+            else {
+                dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
             }
 
 
             //this._saveTrace();
-        },
-        _saveTrace: function () {
-            dijit.byId("tools.save").set("iconClass", "customBigIcon saveIconProcessing");
-
-            this.defCount = this.config.GPParams.length;
-
-
-            if (this.resultOverviewLayer != null) {
-                if (this.resultOverviewLayer.graphics != null) {
-                    if (this.resultOverviewLayer.graphics.length > 0) {
-                        this.defCount = this.defCount + 1;
-                        this._saveLayer(this.config.overviewDetails);
-                    }
-                }
-            }
-            array.forEach(this.config.GPParams, function (GPParam) {
-
-                if (GPParam.results != null && GPParam.saveOptions.type) {
-                    if (GPParam.results.features != null) {
-                        this._saveLayer(GPParam);
-
-                    }
-                    else {
-                        this.defCount = this.defCount - 1;
-
-                    }
-                }
-                else {
-                    this.defCount = this.defCount - 1;
-
-                }
-
-
-            }, this);
-
-            if (this.defCount == 0) {
-                dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
-
-            }
-        },
-        _saveLayer: function (param) {
-            if (param.saveOptions.type.toUpperCase() == "Layer".toUpperCase()) {
-                if (param.saveOptions.saveToLayer != null) {
-
-                    var editDeferred = param.saveOptions.saveToLayer.layerObject.applyEdits(param.results.features, null, null);
-
-                    editDeferred.addCallback(lang.hitch(this, this._saveComplete));
-                    editDeferred.addErrback(function (error) {
-                        this._saveComplete();
-                        this.defCount = this.defCount - 1;
-                        if (this.defCount == 0) {
-                            this._reset();
-                            dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
-                        }
-                        alert(error.message);
-                        console.log(error);
-                    });
-                }
-                else {
-                    alert(param.paramName + ": " + this.config.i18n.error.saveToLayerMissing);
-                    this._saveComplete();
-                }
-            }
-
-            else if (param.saveOptions.type.toUpperCase() == "csv".toUpperCase()) {
-
-                this._addCSVContent(param);
-
-                this._saveComplete();
-
-            }
-
-            else {
-                this._saveComplete();
-            }
-        },
-
-        _saveOverview: function () {
-
-            //if (this.overviewInfo.saveOptions.type.toUpperCase() == "Layer".toUpperCase()) {
-            //    if (this.overviewInfo.saveOptions.saveToLayer != null) {
-
-            //        var editDeferred = this.overviewInfo.saveOptions.saveToLayer.layerObject.applyEdits(this.overviewInfo.results.features, null, null);
-
-            //        editDeferred.addCallback(lang.hitch(this, this._overviewSaved));
-            //        editDeferred.addErrback(function (error) {
-            //            //this._saveComplete();
-            //            //this.defCount = this.defCount - 1;
-            //            //if (this.defCount == 0) {
-            //            //    this._reset();
-            //            //    dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
-            //            //}
-            //            //alert(error.message);
-            //            //console.log(error);
-            //        });
-            //    }
-            //    else {
-            //        alert(this.overviewInfo.paramName + ": " + this.config.i18n.error.saveToLayerMissing);
-            //        //this._saveComplete();
-            //    }
-            //}
-
-            //else if (param.saveOptions.type.toUpperCase() == "csv".toUpperCase()) {
-
-            //    this._addCSVContent(this.overviewInfo);
-
-            //    //this._saveComplete();
-
-            //}
-
-            //else {
-            //    //this._saveComplete();
-            //}
         },
         _clearTool: function () {
             this._reset();
@@ -473,12 +513,6 @@
         },
         _drawComplete: function (evt) {
             this.map.graphics.clear();
-
-        },
-        _clearSelected: function (evt) {
-            if (domProp.get(dijit.byId("tools.add"), "iconClass") == "customBigIcon addIconSelected") {
-                this.map.graphics.clear();
-            }
 
         },
         _skipBtn: function (resultItem) {

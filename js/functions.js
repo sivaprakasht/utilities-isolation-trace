@@ -9,6 +9,8 @@
     "esri/symbols/SimpleLineSymbol",
     "esri/symbols/SimpleFillSymbol",
     "esri/symbols/Symbol",
+    "esri/geometry/Point",
+    "esri/geometry/Extent"
 ],
 function (
     dojo,
@@ -20,7 +22,9 @@ function (
     PictureMarkerSymbol,
     SimpleLineSymbol,
     SimpleFillSymbol,
-    Symbol
+    Symbol,
+    Point,
+    Extent
 
     ) {
     return declare(null, {
@@ -29,9 +33,9 @@ function (
         getLineCenter: function (polyline) {
 
             var path = polyline.paths[Math.round(polyline.paths.length / 2) - 1];
-            pointIndex = Math.round((path.length - 1) / 2) - 1;
-            startPoint = path[pointIndex];
-            endPoint = path[pointIndex + 1];
+            var pointIndex = Math.round((path.length - 1) / 2) - 1;
+            var startPoint = path[pointIndex];
+            var endPoint = path[pointIndex + 1];
             return new Point((startPoint[0] + endPoint[0]) / 2.0, (startPoint[1] + endPoint[1]) / 2.0, polyline.spatialReference);
         },
         findLayer: function (layers, layerName) {
@@ -68,9 +72,8 @@ function (
 
             if (json.type == "simplefillsymbol" || json.type == "esriSFS") {
                 return new SimpleFillSymbol(json);
-            }
-            else if (json.type == "simplemarkersymbol" || json.type == "esriSMS") {
-                if ('path' in json) {
+            }else if (json.type == "simplemarkersymbol" || json.type == "esriSMS") {
+                if ("path" in json) {
                     var sms = new SimpleMarkerSymbol(json);
                     sms.setPath(json.path);
                     sms.setSize(json.size);
@@ -79,15 +82,12 @@ function (
                     sms.yoffset = json.yoffset;
                     return sms;
 
-                }
-                else
+                }else {
                     return new SimpleMarkerSymbol(json);
-
-            }
-            else if (json.type == "simplemlinesymbol" || json.type == "esriSLS") {
+                }
+            }else if (json.type == "simplemlinesymbol" || json.type == "esriSLS") {
                 return new SimpleLineSymbol(json);
             }
-
 
         },
         getInfoWindowPositionPoint: function (feature) {
@@ -108,7 +108,7 @@ function (
         },
 
         layerFieldsToFieldInfos: function (layer) {
-            fieldInfo = null;
+            var fieldInfo = null;
             if (layer.popupInfo != null) {
                 if (layer.popupInfo.fieldInfos != null) {
                     fieldInfo = layer.popupInfo.fieldInfos;
@@ -116,7 +116,7 @@ function (
             }
             if (fieldInfo == null) {
                 fieldInfo = array.map(layer.layerObject.fields, function (field) {
-                    return { 'fieldName': field.name, 'isEditable': field.editable, 'tooltip': field.alias, 'label': field.alias };
+                    return { "fieldName": field.name, "isEditable": field.editable, "tooltip": field.alias, "label": field.alias };
                 });
             }
           

@@ -34,7 +34,7 @@ function (
             this._initEventLayer();
         },
         _initEventLayer: function () {
-            if (this.config.eventDetails.layerName != "") {
+            if (this.config.eventDetails.layerName !== "") {
                 array.some(this.layers, lang.hitch(this, function (layer) {
 
                     if (layer.title == this.config.eventDetails.layerName) {

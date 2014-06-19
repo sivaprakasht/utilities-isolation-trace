@@ -104,9 +104,8 @@
 
             if (this.config.editingAllowed === false) {
                 dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
-                dijit.byId("tools.save").setDisabled(true)
-            }
-            else {
+                dijit.byId("tools.save").setDisabled(true);
+            } else {
                 on(dijit.byId("tools.save"), "click", lang.hitch(this, this._saveTool));
             }
             on(dijit.byId("tools.clear"), "click", lang.hitch(this, this._clearTool));
@@ -119,14 +118,11 @@
             on(this.gp, "get-result-data-complete", lang.hitch(this, this._GPComplete));
 
             this.gp.setOutSpatialReference(this.map.spatialReference);
-
-
             this._createGPResults();
             this._createToolbarGraphic();
             this._createInfoWindows();
             this._createTimer();
             this._initCSVDownload();
-
 
             if (this.overviewInfo != null) {
                 if (this.overviewInfo.saveOptions != null) {
@@ -179,21 +175,21 @@
             this.emit("hide-busy", { "Name": "gptools" });
         },
         _overviewSaved: function (info) {
-            if ('error' in info) {
+            if ("error" in info) {
                 alert(info.error);
-            }
-            else if (info.type == "Updated") {
+            } else if (info.type == "Updated") {
                 this._saveOutputs(true);
-            }
-            else if (info.type == "Added") {
+            } else if (info.type == "Added") {
                 this._hideBusyIndicator();
             }
         },
         _saveOutputs: function (skipOverview) {
-            defs = [];
+            var defs = [];
             this.csvData = "";
             array.forEach(this.config.geoprocessing.outputs, function (output) {
-                if (output.type != "Overview") {
+                if (output.type == "Overview" && skipOverview) {
+                    //nothing
+                } else {
                     if (output.results != null && output.saveOptions.type) {
                         if (output.results.features != null) {
                             if (output.results.features.length > 0) {
@@ -201,8 +197,7 @@
                                     if (output.saveOptions.saveToLayer != null) {
                                         defs.push(output.saveOptions.saveToLayer.layerObject.applyEdits(output.results.features, null, null).promise);
                                     }
-                                }
-                                else if (output.saveOptions.type.toUpperCase() == "csv".toUpperCase()) {
+                                } else if (output.saveOptions.type.toUpperCase() == "csv".toUpperCase()) {
                                     defs.push(this._createCSVContent(output.results, output.saveOptions.name).promise);
 
                                 }
@@ -214,8 +209,8 @@
             all(defs).then(lang.hitch(this, function (results) {
 
                 array.forEach(results, function (result) {
-                    if ('csvdata' in result) {
-                        this.csvData = this.csvData == "" ? result['csvdata'] : this.csvData + result['csvdata'];
+                    if ("csvdata" in result) {
+                        this.csvData = this.csvData === "" ? result.csvdata : this.csvData + result.csvdata;
                     }
                 }, this);
 
@@ -224,7 +219,7 @@
         },
         _saveComplete: function () {
 
-            if (this.csvData != "") {
+            if (this.csvData !== "") {
 
                 if (has("ie") >= 10) {
                     var blob = new Blob([this.csvData], {
@@ -232,8 +227,7 @@
                     });
                     window.navigator.msSaveBlob(blob, this.config.i18n.gp.downloadFileName + ".csv");
 
-                }
-                else if (has("chrome") > 14) {
+                } else if (has("chrome") > 14) {
                     var csvContent = "data:text/csv;charset=utf-8," + this.csvData;
 
                     var encodedUri = encodeURI(csvContent);
@@ -243,8 +237,7 @@
 
                     link.click(); // This will download the data file named "my_data.csv"
 
-                }
-                else {
+                } else {
                     dojo.byId("reportinput").value = this.csvData;
                     var f = dojo.byId("downloadform");
                     f.submit();
@@ -262,10 +255,8 @@
             setTimeout(lang.hitch(this, function () {
                 var csvNewLineChar = "\r\n";
                 var csvContent = title + csvNewLineChar + csvNewLineChar;
-
-
                 var atts = [];
-                var dateFlds = []
+                var dateFlds = [];
                 var idx = 0;
                 if (results.features.length > 0) {
                     for (var key in results.features[0].attributes) {
@@ -279,44 +270,39 @@
                                     }
                                     idx += 1;
 
-                                    atts.push(field["alias"]);
+                                    atts.push(field.alias);
                                     return true;
                                 }
                             }, this);
                         }
                     }
-
-
-
                     csvContent += atts.join(",") + csvNewLineChar;
                     array.forEach(results.features, function (feature, index) {
                         atts = [];
                         idx = 0;
+                       
+                        if (feature.attributes != null) {
+                            for (var k in feature.attributes) {
 
-                        for (var k in feature.attributes) {
-
-                            if (feature.attributes.hasOwnProperty(k)) {
-                                if (dateFlds.indexOf(idx) >= 0) {
-                                    atts.push('"' + this._formatDate(feature.attributes[k]) + '"');
+                                if (feature.attributes.hasOwnProperty(k)) {
+                                    if (dateFlds.indexOf(idx) >= 0) {
+                                        atts.push("\"" + this._formatDate(feature.attributes[k]) + "\"");
+                                    } else {
+                                        atts.push("\"" + feature.attributes[k] + "\"");
+                                    }
                                 }
-                                else {
-                                    atts.push('"' + feature.attributes[k] + '"');
-                                }
+                                idx = idx + 1;
                             }
-                            idx = idx + 1;
                         }
-
-
-                        dataLine = atts.join(",");
+                        var dataLine = atts.join(",");
 
                         csvContent += dataLine + csvNewLineChar;
                     }, this);
                     csvContent += csvNewLineChar + csvNewLineChar;
-                }
-                else {
+                } else {
                     array.forEach(results.fields, function (field, index) {
 
-                        atts.push(field["alias"]);
+                        atts.push(field.alias);
 
                     }, this);
                     csvContent += atts.join(",") + csvNewLineChar;
@@ -330,8 +316,8 @@
         _formatDate: function (value) {
             var inputDate = new Date(value);
             return dojo.date.locale.format(inputDate, {
-                selector: 'date',
-                datePattern: 'MM d, y'
+                selector: "date",
+                datePattern: "MM-d-y"
             });
 
         },
@@ -374,16 +360,7 @@
                 output.layer = layer;
 
                 if (output.saveOptions.type.toUpperCase() == "Layer".toUpperCase()) {
-                    output.saveOptions.saveToLayer = this.functions.findLayer(this.layers, output.saveOptions.name)
-                    //array.some(this.layers, lang.hitch(this, function (layer) {
-
-                    //    if (layer.title == output.saveOptions.name) {
-                    //        output.saveOptions.saveToLayer = layer;
-                    //        console.log(output.saveOptions.name + " " + "Set");
-                    //        return true;
-                    //    }
-
-                    //}));
+                    output.saveOptions.saveToLayer = this.functions.findLayer(this.layers, output.saveOptions.name);
                 }
 
                 var cp = new ContentPane({
@@ -493,11 +470,8 @@
                                             if (output.paramName == field.paramName) {
                                                 newfeat.attributes[field.fieldName] = output.results.features.length;
 
-
                                             }
                                         });
-
-
                                     }
                                 }, this);
                             }
@@ -514,13 +488,10 @@
                     this._saveOutputs(true);
 
                 }
-            }
-            else {
+            } else {
                 this._saveOutputs(true);
             }
 
-
-            //this._saveTrace();
         },
         _clearTool: function () {
             this._reset();
@@ -530,7 +501,7 @@
             this._resetResults();
             dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
             dijit.byId("tools.run").set("iconClass", "customBigIcon runDisabledIcon");
-            
+
         },
         _resetInputs: function () {
             array.forEach(this.gpInputDetails, function (input) {
@@ -549,8 +520,6 @@
                     output.resultsPane.set("content", "");
                 }
             }, this);
-
-
         },
         _toggleControls: function (active) {
 
@@ -597,7 +566,7 @@
             return function (e) {
                 var geometry;
                 if (resultItem.controlDetails.skipGraphic.geometry.type == "polyline") {
-                    geometry = this._getLineCenter(resultItem.controlDetails.skipGraphic.geometry);
+                    geometry = this.functions.getLineCenter(resultItem.controlDetails.skipGraphic.geometry);
                 } else {
                     geometry = resultItem.controlDetails.skipGraphic.geometry;
                 }
@@ -613,8 +582,6 @@
             this.timer.stop();
             var highightGraphic = new Graphic(geometry, null, null, null);
             this.aniLayer.add(highightGraphic);
-
-
             this.timer.start();
         },
         _initCSVDownload: function () {
@@ -633,40 +600,27 @@
             this.aniLayer = new GraphicsLayer();
             //  var aniSymbol = new PictureMarkerSymbol("./images/ani/Cyanglow.gif",25,25);
             var aniSymbol = new PictureMarkerSymbol(this.config.highlighterDetails.image, this.config.highlighterDetails.width, this.config.highlighterDetails.height);
-
             var aniRen = new SimpleRenderer(aniSymbol);
-
-
             this.aniLayer.id = "aniLayer";
-
             this.aniLayer.setRenderer(aniRen);
 
             this.map.addLayer(this.aniLayer);
-
-
             this.timer.onTick = lang.hitch(this, function () {
                 this.timer.stop();
                 console.info("hightlighter complete");
                 this.aniLayer.clear();
             });
-
-
         },
         _createInfoWindows: function () {
 
             this.template = new InfoTemplate();
             this.template.setTitle(this.config.i18n.page.bypass);
-
-
-
             this.template.setContent(lang.hitch(this, this._createSkipButtonForPopup));
-
-
         },
         _createSkipButtonForPopup: function (graphic) {
 
-            var btnBypass = null
-            if (graphic.bypassed == true) {
+            var btnBypass = null;
+            if (graphic.bypassed === true) {
                 btnBypass = new Button({
 
                     baseClass: "",
@@ -674,8 +628,7 @@
                     showLabel: false
 
                 }, dojo.create("div"));
-            }
-            else {
+            } else {
                 btnBypass = new Button({
 
                     baseClass: "",
@@ -697,8 +650,7 @@
                     this.skipLayer.remove(resultItem.controlDetails.skipGraphic);
                     resultItem.controlDetails.selectionGraphic.bypassed = false;
 
-                }
-                else {
+                } else {
                     btn.set("iconClass", "resultItemButtonSkipIconSelected resultItemButton");
                     this.skipLayer.add(resultItem.controlDetails.skipGraphic);
                     resultItem.controlDetails.selectionGraphic.bypassed = true;
@@ -707,9 +659,7 @@
 
                 // this._skipBtn(graphic.resultItem)
                 this.map.infoWindow.hide();
-            }
-
-
+            };
 
         },
         _GPExecute: function () {
@@ -807,8 +757,6 @@
                     return true;
                 }
             }, this);
-
-
         },
         _GPError: function (message) {
             console.log(message.error);
@@ -823,8 +771,6 @@
                 this.resultsCnt = this.resultsCnt - 1;
 
                 if (this.resultsCnt === 0) {
-
-
                     dijit.byId("tools.run").set("iconClass", "customBigIcon runIcon");
                     dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
                     var ext = this.overExtent;
@@ -855,7 +801,6 @@
             var cp = dijit.byId(selectedGPParam.paramName + "CP");
 
             cp.set("content", "");
-
 
             array.forEach(selectedGPParam.results.features, function (resultItem) {
                 var process = true;

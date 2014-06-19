@@ -179,7 +179,7 @@ define([], function () {
                       }
                   },
                   "saveOptions": {
-                      "type": "Layer",
+                      "type": "CSV",
                       "name": "Outage Area"
                   },
                   "fieldMap": [

@@ -63,11 +63,11 @@ define([
             this.agolPopupclickEventListener = agolPopupclickEventListener;
             var fieldInfo = this.functions.layerFieldsToFieldInfos(layer);
             this.layerInfos = [{
-                'featureLayer': this.layer.layerObject,
-                'showAttachments': false,
-                'isEditable': true,
+                "featureLayer": this.layer.layerObject,
+                "showAttachments": false,
+                "isEditable": true,
                 "showDeleteButton": false,
-                'fieldInfos': fieldInfo
+                "fieldInfos": fieldInfo
             }];
 
             var defaults = lang.mixin({}, this.options, options);
@@ -164,8 +164,6 @@ define([
             if (featAdd != null) {
                 if (featAdd.length > 0) {
                     var screenPoint = this.map.toScreen(this.functions.getInfoWindowPositionPoint(this.updateFeature));
-
-
                     dojo.query("head").append(this.css);
                    
                     this.map.infoWindow.setContent(this.attInspector.domNode);
@@ -197,7 +195,7 @@ define([
         },
         saveClicked: function () {
             this.emit("saving");
-            e = dojo.query(this.css);
+            var e = dojo.query(this.css);
             if (e.length) {
                 e = e[0];
                 e.parentNode.removeChild(e);
@@ -208,8 +206,6 @@ define([
 
             this.layer.layerObject.applyEdits(null, [this.updateFeature], null, lang.hitch(this, this.featureUpdated), lang.hitch(this, this.featureError));
             this.map.infoWindow.hide();
-
-
         },
         infoWindowHide: function (evt) {
          //   this.infoHideHandler.remove();

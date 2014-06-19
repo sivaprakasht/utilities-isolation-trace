@@ -179,7 +179,7 @@ define([], function () {
                       }
                   },
                   "saveOptions": {
-                      "type": "CSV",
+                      "type": "layer",
                       "name": "Outage Area"
                   },
                   "fieldMap": [
@@ -233,7 +233,7 @@ define([], function () {
                       "IDField": "FACILITYID"
                   },
                   "saveOptions": {
-                      "type": "csv",
+                      "type": "layer",
                       "name": "Isolating System Valves"
                   }
               },
@@ -273,7 +273,7 @@ define([], function () {
                       "IDField": ""
                   },
                   "saveOptions": {
-                      "type": "csv",
+                      "type": "layer",
                       "name": "Isolated Hydrants"
                   }
               },
@@ -313,7 +313,7 @@ define([], function () {
                       "IDField": ""
                   },
                   "saveOptions": {
-                      "type": "csv",
+                      "type": "layer",
                       "name": "Isolated Customers"
                   }
               }

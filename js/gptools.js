@@ -187,9 +187,7 @@
             var defs = [];
             this.csvData = "";
             array.forEach(this.config.geoprocessing.outputs, function (output) {
-                if (output.type == "Overview" && skipOverview) {
-                    //nothing
-                } else {
+                if ((output.type == "Overview" && skipOverview === false) || output.type != "Overview") {
                     if (output.results != null && output.saveOptions.type) {
                         if (output.results.features != null) {
                             if (output.results.features.length > 0) {
@@ -245,7 +243,7 @@
 
             }
             this._reset();
-            dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
+            dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
             this._hideBusyIndicator();
 
         },

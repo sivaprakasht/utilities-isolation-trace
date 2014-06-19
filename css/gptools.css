@@ -87,7 +87,12 @@
 }
 
 .runIcon {
-    background-image: url("../images/trace.png");
+    background-image: url("../images/run.png");
+    background-color: rgba(102,102,102,0.80);
+}
+
+.runDisabledIcon {
+    background-image: url("../images/runDisabled.png");
     background-color: rgba(102,102,102,0.80);
 }
 

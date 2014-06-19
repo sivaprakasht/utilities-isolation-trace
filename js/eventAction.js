@@ -38,7 +38,7 @@ function (
                 array.some(this.layers, lang.hitch(this, function (layer) {
 
                     if (layer.title == this.config.eventDetails.layerName) {
-                        this.eventLayer = layer;
+                        this.config.eventDetails.EventLayer = layer;
                         console.log("Event Layer found: " + this.config.eventDetails.layerName);
                         return false;
                     }
@@ -47,13 +47,13 @@ function (
             }
         },
         findEventFeature: function () {
-            if (this.eventLayer != null) {
-                if (this.config.eventDetails.EventID != null) {
+            if (this.config.eventDetails.EventLayer != null) {
+                if (this.config.EventID != null) {
                     var query = new Query();
-                    query.where = lang.replace(this.config.eventDetails.whereClause, this.config.eventDetails);
-                    query.outFields = "";//["*"];
+                    query.where = lang.replace(this.config.eventDetails.whereClause,this.config);
+                    //query.outFields = "";//["*"];
 
-                    this.eventLayer.layerObject.queryFeatures(query, lang.hitch(this, function (featureSet) {
+                    this.config.eventDetails.EventLayer.layerObject.queryFeatures(query, lang.hitch(this, function (featureSet) {
 
                         if (featureSet.features.length >= 1) {
                             

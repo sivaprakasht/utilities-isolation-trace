@@ -166,6 +166,7 @@
             array.some(this.gpInputDetails, function (layer) {
                 if (layer.type == addType) {
                     layer.add(new Graphic(point, null, null, null));
+                    dijit.byId("tools.run").set("iconClass", "customBigIcon runIcon");
                     return true;
                 }
             });
@@ -258,7 +259,7 @@
         _createCSVContent: function (results, title) {
             var deferred = new Deferred();
 
-            setTimeout(lang.hitch(this,function () {
+            setTimeout(lang.hitch(this, function () {
                 var csvNewLineChar = "\r\n";
                 var csvContent = title + csvNewLineChar + csvNewLineChar;
 
@@ -314,9 +315,9 @@
                 }
                 else {
                     array.forEach(results.fields, function (field, index) {
-                       
+
                         atts.push(field["alias"]);
-                       
+
                     }, this);
                     csvContent += atts.join(",") + csvNewLineChar;
 
@@ -485,8 +486,7 @@
                             dijit.byId("tools.save").set("iconClass", "customBigIcon saveIconProcessing");
                             var newfeat = this.editPopup.newFeature(this.overviewInfo.results.features[0].geometry);
 
-                            if (this.overviewInfo.fieldMap != null)
-                            {
+                            if (this.overviewInfo.fieldMap != null) {
                                 array.forEach(this.overviewInfo.fieldMap, function (field) {
                                     if (newfeat.attributes.hasOwnProperty(field.fieldName)) {
                                         array.forEach(this.config.geoprocessing.outputs, function (output) {
@@ -496,10 +496,10 @@
 
                                             }
                                         });
-                                       
-                                        
+
+
                                     }
-                                },this);
+                                }, this);
                             }
                             this.editPopup.addFeature(newfeat);
                             dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
@@ -528,6 +528,9 @@
         _reset: function () {
             this._resetInputs();
             this._resetResults();
+            dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
+            dijit.byId("tools.run").set("iconClass", "customBigIcon runDisabledIcon");
+            
         },
         _resetInputs: function () {
             array.forEach(this.gpInputDetails, function (input) {
@@ -751,6 +754,7 @@
                 alert(this.config.i18n.gp.failed);
 
                 dijit.byId("tools.run").set("iconClass", "customBigIcon runIcon");
+                dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
                 return;
 
             }
@@ -770,6 +774,7 @@
             }
             catch (exp) {
                 dijit.byId("tools.run").set("iconClass", "customBigIcon runIcon");
+                dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
 
             }
         },
@@ -810,6 +815,7 @@
             alert(message.error.message);
             dojo.style("loader", "display", "none");
             dijit.byId("tools.run").set("iconClass", "customBigIcon runIcon");
+            dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
 
         },
         _processGPResults: function (message, paramName) {
@@ -820,6 +826,7 @@
 
 
                     dijit.byId("tools.run").set("iconClass", "customBigIcon runIcon");
+                    dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
                     var ext = this.overExtent;
                     if (ext) {
                         this.map.setExtent(ext.expand(1.5));

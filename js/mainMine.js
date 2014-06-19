@@ -462,7 +462,7 @@ function (
         },
         _zoomToEvent: function () {
             if (this.eventLayer != null) {
-                if (this.config.eventDetails.EventID != null) {
+                if (this.config.EventID != null) {
                     var query = new Query();
                     query.where = lang.replace(this.config.eventDetails.whereClause, this.config.eventDetails);
                     //query.objectIds = this.config.eventDetails

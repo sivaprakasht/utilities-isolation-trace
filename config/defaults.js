@@ -51,7 +51,7 @@ define([], function () {
             "timeout": 5000
         },
         "eventDetails": {
-            "layerName": "Leak Location",
+            "layerName": "Leak Report",
             "whereClause": "OBJECTID = {EventID}",
             "zoomScale": 18
         },

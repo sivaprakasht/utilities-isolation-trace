@@ -73,6 +73,7 @@ define([
             var defaults = lang.mixin({}, this.options, options);
             // properties
             this.showGraphic = defaults.showGraphic;
+            this.attsTemplate = this.layer.layerObject.templates[0].prototype.attributes;
 
         },
 
@@ -111,7 +112,7 @@ define([
                 _hideNavButtons: true
 
             }, domConstruct.create("div"));
-
+           
             //dojo.addClass(this.attInspector.domNode, "css/editorPopup.css");
             //add a save button next to the delete button
             var saveButton = new Button({ label: this.config.i18n.ui.saveButton, "class": "saveButton" });
@@ -134,7 +135,7 @@ define([
                 this.map.infoWindow.hide();
             }));
 
-
+        
         },
 
         _mapClick: function (evt) {
@@ -156,7 +157,7 @@ define([
         },
         newFeature: function (geom) {
             this._initAttEditor();
-            return new Graphic(geom, null, this.layer.layerObject.templates[0].prototype.attributes);
+            return new Graphic(geom, null, dojo.clone(this.attsTemplate));
         },
 
         featureAdded: function (featAdd, featUpdate, featDel) {

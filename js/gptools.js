@@ -182,41 +182,44 @@
                 alert(info.error);
             }
             else if (info.type == "Updated") {
-                defs = [];
-
-                array.forEach(this.config.geoprocessing.outputs, function (output) {
-                    if (output.type != "Overview") {
-                        if (output.results != null && output.saveOptions.type) {
-                            if (output.results.features != null) {
-                                if (output.results.features.length > 0) {
-                                    if (output.saveOptions.type.toUpperCase() == "Layer".toUpperCase()) {
-                                        if (output.saveOptions.saveToLayer != null) {
-                                            defs.push(output.saveOptions.saveToLayer.layerObject.applyEdits(output.results.features, null, null).promise);
-                                        }
-                                    }
-                                    else if (output.saveOptions.type.toUpperCase() == "csv".toUpperCase()) {
-                                        defs.push(this._createCSVContent(output.results.features, output.saveOptions.name).promise);
-
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }, this);
-                all(defs).then(lang.hitch(this, function (results) {
-
-                    array.forEach(results, function (result) {
-                        if ('csvdata' in result) {
-                            this.csvData = this.csvData == "" ? result['csvdata'] : this.csvData + result['csvdata'];
-                        }
-                    }, this);
-
-                    this._saveComplete();
-                }));
+                this._saveOutputs(true);
             }
             else if (info.type == "Added") {
                 this._hideBusyIndicator();
             }
+        },
+        _saveOutputs: function (skipOverview) {
+            defs = [];
+            this.csvData = "";
+            array.forEach(this.config.geoprocessing.outputs, function (output) {
+                if (output.type != "Overview") {
+                    if (output.results != null && output.saveOptions.type) {
+                        if (output.results.features != null) {
+                            if (output.results.features.length > 0) {
+                                if (output.saveOptions.type.toUpperCase() == "Layer".toUpperCase()) {
+                                    if (output.saveOptions.saveToLayer != null) {
+                                        defs.push(output.saveOptions.saveToLayer.layerObject.applyEdits(output.results.features, null, null).promise);
+                                    }
+                                }
+                                else if (output.saveOptions.type.toUpperCase() == "csv".toUpperCase()) {
+                                    defs.push(this._createCSVContent(output.results, output.saveOptions.name).promise);
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }, this);
+            all(defs).then(lang.hitch(this, function (results) {
+
+                array.forEach(results, function (result) {
+                    if ('csvdata' in result) {
+                        this.csvData = this.csvData == "" ? result['csvdata'] : this.csvData + result['csvdata'];
+                    }
+                }, this);
+
+                this._saveComplete();
+            }));
         },
         _saveComplete: function () {
 
@@ -252,55 +255,84 @@
             this._hideBusyIndicator();
 
         },
-        _createCSVContent: function (features, title) {
+        _createCSVContent: function (results, title) {
             var deferred = new Deferred();
 
-            setTimeout(function () {
+            setTimeout(lang.hitch(this,function () {
                 var csvNewLineChar = "\r\n";
                 var csvContent = title + csvNewLineChar + csvNewLineChar;
 
 
                 var atts = [];
                 var dateFlds = []
-                array.forEach(features.fields, function (field, index) {
+                var idx = 0;
+                if (results.features.length > 0) {
+                    for (var key in results.features[0].attributes) {
+                        if (results.features[0].attributes.hasOwnProperty(key)) {
 
-                    if (field.type == "esriFieldTypeDate") {
-                        dateFlds.push(index);
+                            array.some(results.fields, function (field) {
+                                if (field.name == key) {
+                                    if (field.type == "esriFieldTypeDate") {
+                                        dateFlds.push(idx);
 
-                    }
-                    atts.push(field["alias"]);
-                }
-               , this);
+                                    }
+                                    idx += 1;
 
-
-                csvContent += atts.join(",") + csvNewLineChar;
-                array.forEach(features, function (feature, index) {
-                    atts = [];
-                    var idx = 0;
-
-                    for (var k in feature.attributes) {
-
-                        if (feature.attributes.hasOwnProperty(k)) {
-                            if (dateFlds.indexOf(idx) >= 0) {
-                                atts.push('"' + this._formatDate(feature.attributes[k]) + '"');
-                            }
-                            else {
-                                atts.push('"' + feature.attributes[k] + '"');
-                            }
+                                    atts.push(field["alias"]);
+                                    return true;
+                                }
+                            }, this);
                         }
-                        idx = idx + 1;
                     }
 
 
-                    dataLine = atts.join(",");
 
-                    csvContent += dataLine + csvNewLineChar + csvNewLineChar + csvNewLineChar;
-                }, this);
+                    csvContent += atts.join(",") + csvNewLineChar;
+                    array.forEach(results.features, function (feature, index) {
+                        atts = [];
+                        idx = 0;
 
+                        for (var k in feature.attributes) {
+
+                            if (feature.attributes.hasOwnProperty(k)) {
+                                if (dateFlds.indexOf(idx) >= 0) {
+                                    atts.push('"' + this._formatDate(feature.attributes[k]) + '"');
+                                }
+                                else {
+                                    atts.push('"' + feature.attributes[k] + '"');
+                                }
+                            }
+                            idx = idx + 1;
+                        }
+
+
+                        dataLine = atts.join(",");
+
+                        csvContent += dataLine + csvNewLineChar;
+                    }, this);
+                    csvContent += csvNewLineChar + csvNewLineChar;
+                }
+                else {
+                    array.forEach(results.fields, function (field, index) {
+                       
+                        atts.push(field["alias"]);
+                       
+                    }, this);
+                    csvContent += atts.join(",") + csvNewLineChar;
+
+                }
                 deferred.resolve({ "csvdata": csvContent });
-            }, 1000);
+            }, 1000));
 
             return deferred;
+        },
+        _formatDate: function (value) {
+            var inputDate = new Date(value);
+            return dojo.date.locale.format(inputDate, {
+                selector: 'date',
+                datePattern: 'MM d, y'
+            });
+
         },
         _createGPResults: function () {
             this.sc = new StackContainer({
@@ -375,6 +407,9 @@
             this.sc.startup();
             this.controller.startup();
             this.sc.resize();
+            if (this.overviewInfo == null) {
+                alert("This app requires a overview output from the GP process");
+            }
         },
         _createToolbarGraphic: function () {
 
@@ -444,21 +479,44 @@
             if (this.overviewInfo.results != null) {
                 if (this.overviewInfo.results.features != null) {
                     if (this.overviewInfo.results.features.length > 0) {
-                        this._toggleControls("false");
-                        dijit.byId("tools.save").set("iconClass", "customBigIcon saveIconProcessing");
-                        var newfeat = this.editPopup.newFeature(this.overviewInfo.results.features[0].geometry);
-                        this.editPopup.addFeature(newfeat);
-                        dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
+                        if (this.editPopup != null) {
+
+                            this._toggleControls("false");
+                            dijit.byId("tools.save").set("iconClass", "customBigIcon saveIconProcessing");
+                            var newfeat = this.editPopup.newFeature(this.overviewInfo.results.features[0].geometry);
+
+                            if (this.overviewInfo.fieldMap != null)
+                            {
+                                array.forEach(this.overviewInfo.fieldMap, function (field) {
+                                    if (newfeat.attributes.hasOwnProperty(field.fieldName)) {
+                                        array.forEach(this.config.geoprocessing.outputs, function (output) {
+                                            if (output.paramName == field.paramName) {
+                                                newfeat.attributes[field.fieldName] = output.results.features.length;
+
+
+                                            }
+                                        });
+                                       
+                                        
+                                    }
+                                },this);
+                            }
+                            this.editPopup.addFeature(newfeat);
+                            dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
+                        } else {
+                            this._saveOutputs(false);
+                        }
                     } else {
-                        dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
+                        this._saveOutputs(true);
                     }
 
                 } else {
-                    dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
+                    this._saveOutputs(true);
+
                 }
             }
             else {
-                dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
+                this._saveOutputs(true);
             }
 
 

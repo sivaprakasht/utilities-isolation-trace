@@ -179,9 +179,23 @@ define([], function () {
                       }
                   },
                   "saveOptions": {
-                      "type": "layer",
+                      "type": "Layer",
                       "name": "Outage Area"
-                  }
+                  },
+                  "fieldMap": [
+                      {
+                          "fieldName": "NUMHYDS",
+                          "paramName": "Isolated_Hydrants",
+                      },
+                      {
+                          "fieldName": "NUMVALVES",
+                          "paramName": "Isolating_Valves",
+                      },
+                      {
+                          "fieldName": "CUSTOUT",
+                          "paramName": "Isolated_Customers",
+                      }
+                  ]
               },
               {
                   "paramName": "Isolating_Valves",

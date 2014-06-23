@@ -204,16 +204,22 @@
                     }
                 }
             }, this);
-            all(defs).then(lang.hitch(this, function (results) {
+            all(defs).then(
+                lang.hitch(this, function (results) {
 
-                array.forEach(results, function (result) {
-                    if ("csvdata" in result) {
-                        this.csvData = this.csvData === "" ? result.csvdata : this.csvData + result.csvdata;
-                    }
-                }, this);
+                    array.forEach(results, function (result) {
+                        if ("csvdata" in result) {
+                            this.csvData = this.csvData === "" ? result.csvdata : this.csvData + result.csvdata;
+                        }
+                    }, this);
 
-                this._saveComplete();
-            }));
+                    this._saveComplete();
+                }),
+
+              lang.hitch(this, function (error) {
+                  alert(error);
+                  this._saveComplete();
+              }));
         },
         _saveComplete: function () {
 
@@ -278,7 +284,7 @@
                     array.forEach(results.features, function (feature, index) {
                         atts = [];
                         idx = 0;
-                       
+
                         if (feature.attributes != null) {
                             for (var k in feature.attributes) {
 
@@ -549,24 +555,26 @@
 
                 if (btn.get("iconClass") == "resultItemButtonSkipIconSelected resultItemButton") {
                     btn.set("iconClass", "resultItemButtonSkipIcon resultItemButton");
-                    this.skipLayer.remove(resultItem.controlDetails.skipGraphic);
-                    resultItem.controlDetails.selectionGraphic.bypassed = false;
-
+                    if (this.skipLayer != null) {
+                        this.skipLayer.remove(resultItem.controlDetails.skipGraphic);
+                        resultItem.controlDetails.selectionGraphic.bypassed = false;
+                    }
                 } else {
                     btn.set("iconClass", "resultItemButtonSkipIconSelected resultItemButton");
-                    this.skipLayer.add(resultItem.controlDetails.skipGraphic);
-                    resultItem.controlDetails.selectionGraphic.bypassed = true;
-
+                    if (this.skipLayer != null) {
+                        this.skipLayer.add(resultItem.controlDetails.skipGraphic);
+                        resultItem.controlDetails.selectionGraphic.bypassed = true;
+                    }
                 }
             };
         },
         _zoomToBtn: function (resultItem) {
             return function (e) {
                 var geometry;
-                if (resultItem.controlDetails.skipGraphic.geometry.type == "polyline") {
-                    geometry = this.functions.getLineCenter(resultItem.controlDetails.skipGraphic.geometry);
+                if (resultItem.controlDetails.selectionGraphic.geometry.type == "polyline") {
+                    geometry = this.functions.getLineCenter(resultItem.controlDetails.selectionGraphic.geometry);
                 } else {
-                    geometry = resultItem.controlDetails.skipGraphic.geometry;
+                    geometry = resultItem.controlDetails.selectionGraphic.geometry;
                 }
                 this.map.centerAt(geometry);
 
@@ -645,14 +653,16 @@
 
                 if (btn.get("iconClass") == "resultItemButtonSkipIconSelected resultItemButton") {
                     btn.set("iconClass", "resultItemButtonSkipIcon resultItemButton");
-                    this.skipLayer.remove(resultItem.controlDetails.skipGraphic);
-                    resultItem.controlDetails.selectionGraphic.bypassed = false;
-
+                    if (this.skipLayer != null) {
+                        this.skipLayer.remove(resultItem.controlDetails.skipGraphic);
+                        resultItem.controlDetails.selectionGraphic.bypassed = false;
+                    }
                 } else {
                     btn.set("iconClass", "resultItemButtonSkipIconSelected resultItemButton");
-                    this.skipLayer.add(resultItem.controlDetails.skipGraphic);
-                    resultItem.controlDetails.selectionGraphic.bypassed = true;
-
+                    if (this.skipLayer != null) {
+                        this.skipLayer.add(resultItem.controlDetails.skipGraphic);
+                        resultItem.controlDetails.selectionGraphic.bypassed = true;
+                    }
                 }
 
                 // this._skipBtn(graphic.resultItem)
@@ -769,14 +779,15 @@
                 this.resultsCnt = this.resultsCnt - 1;
 
                 if (this.resultsCnt === 0) {
-                    dijit.byId("tools.run").set("iconClass", "customBigIcon runIcon");
-                    dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
+
                     var ext = this.overExtent;
                     if (ext) {
                         this.map.setExtent(ext.expand(1.5));
                     }
                     this._showAllResultLayers();
                     this.sc.selectChild(this.overviewInfo.resultsPane);
+                    dijit.byId("tools.run").set("iconClass", "customBigIcon runIcon");
+                    dijit.byId("tools.save").set("iconClass", "customBigIcon saveIcon");
                 }
             }));
 
@@ -784,12 +795,11 @@
         _populateOverview: function (gpParam) {
             array.forEach(gpParam.results.features, function (feature) {
                 this.overExtent = this.overExtent == null ? feature.geometry.getExtent() : this.overExtent.union(feature.geometry.getExtent());
-                if (gpParam.visible.toUpperCase() != "FALSE") {
-                    var selectGraphic = new Graphic(feature.geometry, null, null, null);
-                    if (gpParam.layer != null) {
-                        gpParam.layer.add(selectGraphic);
-                    }
+                var selectGraphic = new Graphic(feature.geometry, null, null, null);
+                if (gpParam.layer != null) {
+                    gpParam.layer.add(selectGraphic);
                 }
+
             }, this);
         },
         _populateResultsToggle: function (selectedGPParam) {
@@ -803,29 +813,30 @@
             array.forEach(selectedGPParam.results.features, function (resultItem) {
                 var process = true;
                 var skipLoc = null;
-
-                if (this.skipLayer.graphics.length > 0) {
-                    array.some(this.skipLayer.graphics, function (item) {
-                        if (item.GPParam == selectedGPParam.paramName) {
-                            if (resultItem.attributes[selectedGPParam.bypassDetails.IDField] == item.attributes[selectedGPParam.bypassDetails.IDField]) {
-                                process = false;
-                                skipLoc = item;
-                                return true;
+                if (this.skipLayer != null) {
+                    if (this.skipLayer.graphics.length > 0) {
+                        array.some(this.skipLayer.graphics, function (item) {
+                            if (item.GPParam == selectedGPParam.paramName) {
+                                if (resultItem.attributes[selectedGPParam.bypassDetails.IDField] == item.attributes[selectedGPParam.bypassDetails.IDField]) {
+                                    process = false;
+                                    skipLoc = item;
+                                    return true;
+                                }
                             }
-                        }
 
-                    });
+                        });
+                    }
+                    if (skipLoc == null) {
+                        skipLoc = new Graphic(resultItem.geometry, null, resultItem.attributes, null);
+                    }
                 }
-                if (skipLoc == null) {
-                    skipLoc = new Graphic(resultItem.geometry, null, resultItem.attributes, null);
-                }
-
                 var selectGraphic = new Graphic(resultItem.geometry, null, resultItem.attributes, null);
                 selectedGPParam.layer.add(selectGraphic);
 
                 var div = domConstruct.create("div", { "id": selectedGPParam.paramName + ":" + resultItem.attributes.OID + "div", class: "resultItem" }, cp.containerNode);
-                skipLoc.GPParam = selectedGPParam.paramName;
-
+                if (skipLoc != null) {
+                    skipLoc.GPParam = selectedGPParam.paramName;
+                }
                 var id;
                 if (resultItem.attributes.OID != null) {
                     id = resultItem.attributes.OID;

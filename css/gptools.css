@@ -102,12 +102,12 @@
 }
 
 .saveIcon {
-    background-image: url("../images/save.png");
+    background-image: url("../images/upload.png");
     background-color: rgba(102,102,102,0.80);
 }
 
 .saveDisabledIcon {
-    background-image: url("../images/savedisabled.png");
+    background-image: url("../images/uploaddisabled.png");
     background-color: rgba(102,102,102,0.80);
 }
 .saveIconProcessing {

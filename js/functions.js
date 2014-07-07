@@ -111,12 +111,33 @@ function (
             var fieldInfo = null;
             if (layer.popupInfo != null) {
                 if (layer.popupInfo.fieldInfos != null) {
+                    array.forEach(layer.popupInfo.fieldInfos, function (fieldInfo) {
+                        if (fieldInfo.format != null) {
+                            if (fieldInfo.format.dateFormat != null) {
+                                if (fieldInfo.format.dateFormat == "shortDateShortTime" ||
+                                    fieldInfo.format.dateFormat == "shortDateShortTime24" ||
+                                    fieldInfo.format.dateFormat == "shortDateLEShortTime" ||
+                                    fieldInfo.format.dateFormat == "shortDateLEShortTime24")
+                                {
+                                    fieldInfo.format.time = true;
+                                }
+                                
+                                
+                            }
+                        }
+                    });
                     fieldInfo = layer.popupInfo.fieldInfos;
                 }
             }
             if (fieldInfo == null) {
                 fieldInfo = array.map(layer.layerObject.fields, function (field) {
-                    return { "fieldName": field.name, "isEditable": field.editable, "tooltip": field.alias, "label": field.alias };
+                    return {
+                        "fieldName": field.name,
+                        "isEditable": field.editable,
+                        "tooltip": field.alias,
+                        "label": field.alias,
+                        "format": { "time": true }
+                    };
                 });
             }
           

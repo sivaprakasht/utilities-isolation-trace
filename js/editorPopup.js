@@ -68,6 +68,7 @@ define([
                 "isEditable": true,
                 "showDeleteButton": false,
                 "fieldInfos": fieldInfo
+
             }];
 
             var defaults = lang.mixin({}, this.options, options);

@@ -3,14 +3,17 @@
     "dojo",
     "dijit",
     "esri",
-    "dojo/ready",
     "dojo/_base/declare",
     "dojo/_base/lang",
-    "dojo/_base/array",
+    "dijit/_WidgetBase",
     "dojo/on",
-    "dojo/dom-prop",
+    "dojo/dom",
+    "dojo/dom-class",
+    "dojo/window",
     "dojo/dom-construct",
+    "dojo/dom-prop",
     "dojo/has",
+    "dojo/topic",
     "dojo/promise/all",
     "dojo/Deferred",
     "esri/graphic",
@@ -28,22 +31,27 @@
     "dijit/form/Button",
     "esri/InfoTemplate",
     "dojox/timing",
-    "application/functions",
-    "application/editorPopup"
-
-], function (
+    "dojo/_base/array",
+    "application/search",
+    "application/editorPopup",
+    "application/functions"
+],
+function (
     Evented,
     dojo,
     dijit,
     esri,
-    ready,
     declare,
     lang,
-    array,
+    _WidgetBase,
     on,
-    domProp,
+    dom,
+    domClass,
+    win,
     domConstruct,
+    domProp,
     has,
+    topic,
     all,
     Deferred,
     Graphic,
@@ -61,33 +69,153 @@
     Button,
     InfoTemplate,
     Timing,
-    Functions,
-    EditPopup
-
+    array,
+    Search,
+    EditPopup,
+    Functions
 ) {
-    return declare([Evented], {
-        map: null,
-        config: {},
-        layers: null,
-        pointLayer: null,
-        toolbar: null,
-        gp: null,
-        handler: null,
-        constructor: function (map, config, layers, agolPopupClickHandle, agolPopupclickEventListener) {
-            this.map = map;
-            this.config = config;
-            this.layers = layers;
+    var Widget = declare([_WidgetBase, Evented], {
+        declaredClass: "application.gptools",
+       
+        options: {
+            toolbar: null,
+            direction: "ltr",
+            config: {}
+        },
+        // lifecycle: 1
+        constructor: function (options) {
 
-            this.agolPopupClickHandle = agolPopupClickHandle;
-            this.agolPopupclickEventListener = agolPopupclickEventListener;
+            // mix in settings and defaults
+            var defaults = lang.mixin({}, this.options, options);
+            // properties
+
+            this.set("buttonbar", defaults.buttonbar);
+            this.set("direction", defaults.direction);
+            this.set("config", defaults.config);
+            //construct the buttons
+            this._buttonbar = dom.byId(this.get("buttonbar"));
+            if (this._buttonbar == null)
+            {
+                topic.publish("app\error", { message: "Toolbar div tag not found" });
+                return;
+            }
+
+            this._addNode = domConstruct.place("<div id='add_button' class='add-button'></div>", this._buttonbar);
+            this._deleteNode = domConstruct.place("<div id='delete_button' class='delete-button'></div>", this._buttonbar);
+            this._runNode = domConstruct.place("<div id='run_button' class='run-button-disabled'></div>", this._buttonbar);
+            this._saveNode = domConstruct.place("<div id='save_button' class='save-button-disabled'></div>", this._buttonbar);
+            this._searchNode = domConstruct.place("<div id='searchDiv'></div>", this._buttonbar);
+
+            // classes
+            this.css = {
+                addButton: "add-button",
+                addButtonSelected: "add-button-selected",
+
+                deleteButton: "delete-button",
+
+                runButton: "run-button",
+                runButtonDisabled: "run-button-disabled",
+
+                saveButton: "save-button",
+                saveButtonDisabled: "save-button-disabled"
+            };
+            this.search = new Search(this.config, this._searchNode);
             this.functions = new Functions();
+        },
+        // start widget. called by user
+        startup: function () {
+            this._init();
+        },
+        // connections/subscriptions will be cleaned up during the destroy() lifecycle phase
+        destroy: function () {
+            this._removeEvents();
+            this.inherited(arguments);
+        },
+        resize: function () {
+            this.emit("resize", {});
+        },
+        /* ---------------- */
+        /* Public Events */
+        /* ---------------- */
+
+        /* ---------------- */
+        /* Public Functions */
+        /* ---------------- */
+
+        /* ---------------- */
+        /* Private Events*/
+        /* ---------------- */
+
+        _drawEnd: function (evt) {
+            this._addLocationToMap(evt.geometry);
+        },
+        _drawComplete: function (evt) {
+            this.map.graphics.clear();
 
         },
-        startup: function () {
+        _windowResized: function () {
 
-            this.toolbar = new Draw(this.map);
-            this.toolbar.on("draw-end", lang.hitch(this, this._drawEnd));
-            this.toolbar.on("draw-complete", lang.hitch(this, this._drawComplete));
+        },
+        _addClicked: function () {
+            // has normal class
+            if (domClass.contains(this._addNode, this.css.addButton)) {
+                // replace with selected class
+                domClass.replace(this._addNode, this.css.addButtonSelected, this.css.addButton);
+            }else if (domClass.contains(this._addNode, this.css.addButtonSelected)) {
+                // replace with normal class
+                domClass.replace(this._addNode, this.css.addButton, this.css.addButtonSelected);
+            }
+        },
+
+        _deleteClicked: function () {
+            topic.publish("app\toggleIndicator", true);
+            this._reset();
+            topic.publish("app\toggleIndicator", false);
+
+        },
+        _runClicked: function () {
+            if (domClass.contains(this._runNode, this.css.runButtonDisabled)) {
+                return;
+            }
+
+        },
+        _saveClicked: function () {
+            if (domClass.contains(this._saveNode, this.css.saveButtonDisabled)) {
+                return;
+            }
+
+        },
+        /* ---------------- */
+        /* Private Functions */
+        /* ---------------- */
+        _mapLocate: function () {
+            this._addLocationToMap( arguments[0]);
+        },
+        _addLocationToMap: function (point) {
+            this.map.infoWindow.hide();
+            var addType = "";
+            if (domClass.contains(this._addNode, this.css.addButtonSelected)) {
+                addType = "Flag";
+            }
+
+            array.some(this.gpInputDetails, function (layer) {
+                if (layer.type == addType) {
+                    layer.add(new Graphic(point, null, null, null));
+                    if (domClass.contains(this._runNode, this.css.runNButtonDisabled)) {
+                        domClass.replace(this._runNode, this.css.runNButtonDisabled, this.css.runButton);
+                    }
+                    return true;
+                }
+            });
+
+        },
+        _mapLoaded: function () {
+            this.set("map", arguments[0]);
+            return;
+
+            this.drawbar = new Draw(this.map);
+            this.drawbar.on("draw-end", lang.hitch(this, this._drawEnd));
+            this.drawbar.on("draw-complete", lang.hitch(this, this._drawComplete));
 
             if (this.config.i18n != null) {
                 if (this.config.i18n.map != null) {
@@ -97,19 +225,15 @@
                     }
                 }
             }
-            this.toolbar.deactivate();
-
-            on(dijit.byId("tools.add"), "click", lang.hitch(this, this._addTool));
-            on(dijit.byId("tools.run"), "click", lang.hitch(this, this._runTool));
+            this.drawbar.deactivate();
 
             if (this.config.editingAllowed === false) {
-                dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
-                dijit.byId("tools.save").setDisabled(true);
-            } else {
-                on(dijit.byId("tools.save"), "click", lang.hitch(this, this._saveTool));
-            }
-            on(dijit.byId("tools.clear"), "click", lang.hitch(this, this._clearTool));
-
+                if (domClass.contains(this._saveNode, this.css.saveButton)) {
+                    // replace with normal class
+                    domClass.replace(this._saveNode, this.css.saveButton, this.css.saveButtonDisabled);
+                }
+            } 
+            
             this.gp = new esri.tasks.Geoprocessor(this.config.geoprocessing.url);
 
             on(this.gp, "error", lang.hitch(this, this._GPError));
@@ -135,44 +259,75 @@
                     }
                 }
             }
-
-            this.emit("ready", { "Name": "gptools" });
-        },
-        addToMap: function (point) {
-            this.map.infoWindow.hide();
-            var addType = "";
-            if (domProp.get(dijit.byId("tools.add"), "iconClass") == "customBigIcon addIconSelected") {
-
-                addType = "Flag";
-
-            } else {
-                if (dijit.byId("tools.barrier") != null) {
-                    if (domProp.get(dijit.byId("tools.barrier"), "iconClass") == "customBigIcon barrierIconSelected") {
-
-                        addType = "Barrier";
-
-                    } else {
-                        return;
-                    }
-                } else {
-                    return;
+        },      
+        _removeEvents: function () {
+            if (this._events && this._events.length) {
+                for (var i = 0; i < this._events.length; i++) {
+                    this._events[i].remove();
                 }
             }
+            this._events = [];
+        },
+        _init: function () {
+            // setup events
+            this._removeEvents();
 
-            array.some(this.gpInputDetails, function (layer) {
-                if (layer.type == addType) {
-                    layer.add(new Graphic(point, null, null, null));
-                    dijit.byId("tools.run").set("iconClass", "customBigIcon runIcon");
-                    return true;
+            this.search.startup();
+
+            //subscribe to events
+            this._events.push(topic.subscribe("app/mapLocate", lang.hitch(this, this._mapLocate)));
+            this._events.push(topic.subscribe("app/mapLoaded", lang.hitch(this, this._mapLoaded)));
+
+            if (this._addNode &&
+                this._saveNode &&
+                this._runNode &&
+                this._deleteNode) {
+                var side = "left";
+                if (this.get("direction") === "rtl") {
+                    side = "right";
                 }
-            });
 
+                var addClick = on(this._addNode, "click", lang.hitch(this, this._addClicked));
+                this._events.push(addClick);
+
+                var deleteClick = on(this._deleteNode, "click", lang.hitch(this, this._deleteClicked));
+                this._events.push(deleteClick);
+
+                var runClick = on(this._runNode, "click", lang.hitch(this, this._runClicked));
+                this._events.push(runClick);
+
+                var saveClick = on(this._saveNode, "click", lang.hitch(this, this._saveClicked));
+                this._events.push(saveClick);
+
+                // window size event
+                var winResize = on(window, "resize", lang.hitch(this, function () {
+                    this._windowResized();
+                }));
+                this._events.push(winResize);
+                // check window size
+                this._windowResized();
+                // fix layout
+                this.resize();
+                // set loaded property
+                this.set("loaded", true);
+                // emit loaded event
+                this.emit("load", {});
+            } else {
+                console.log("GPTools::Missing required node");
+            }
         },
-        _showBusyIndicator: function () {
-            this.emit("show-busy", { "Name": "gptools" });
-        },
-        _hideBusyIndicator: function () {
-            this.emit("hide-busy", { "Name": "gptools" });
+        _reset: function () {
+            if (domClass.contains(this._saveNode, this.css.saveButton)) {
+                // replace with normal class
+                domClass.replace(this._saveNode, this.css.saveButton, this.css.saveButtonDisabled);
+            }
+            if (domClass.contains(this._runNode, this.css.runButton)) {
+                // replace with normal class
+                domClass.replace(this._runNode, this.css.runButton, this.css.runButtonDisabled);
+            }
+            this._resetInputs();
+            this._resetResults();
+
         },
         _overviewSaved: function (info) {
             if ("error" in info) {
@@ -500,13 +655,6 @@
         _clearTool: function () {
             this._reset();
         },
-        _reset: function () {
-            this._resetInputs();
-            this._resetResults();
-            dijit.byId("tools.save").set("iconClass", "customBigIcon saveDisabledIcon");
-            dijit.byId("tools.run").set("iconClass", "customBigIcon runDisabledIcon");
-
-        },
         _resetInputs: function () {
             array.forEach(this.gpInputDetails, function (input) {
                 input.clear();
@@ -542,13 +690,7 @@
             }
 
         },
-        _drawEnd: function (evt) {
-            this.addToMap(evt.geometry);
-        },
-        _drawComplete: function (evt) {
-            this.map.graphics.clear();
-
-        },
+      
         _skipBtn: function (resultItem) {
             return function (e) {
                 var btn = dijit.byId(resultItem.controlDetails.bypassButtonID);
@@ -922,4 +1064,5 @@
 
         }
     });
+    return Widget;
 });

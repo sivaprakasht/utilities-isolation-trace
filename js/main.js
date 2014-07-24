@@ -1,4 +1,4 @@
-﻿/*global define,document */
+/*global define ,document */
 /*jslint sloppy:true,nomen:true */
 /*
  | Copyright 2014 Esri
@@ -23,9 +23,11 @@ define([
     "dojo/dom",
     "dojo/dom-class",
     "dojo/on",
-    "application/common",
-    "application/gptools",
-    "application/eventAction"
+    "dojo/topic",
+    "application/Drawer",
+    "application/eventAction",
+    "application/basemapButton",
+    "application/navigationButtons"
 ], function (
     ready,
     declare,
@@ -34,20 +36,49 @@ define([
     dom,
     domClass,
     on,
-    Common,
-    GPTools,
-    EventAction
-) {
+    topic,
+    Drawer,
+    EventAction,
+    BasemapButton,
+    NavigationButtons
+    ) {
     return declare(null, {
         config: {},
         startup: function (config) {
             // config will contain application and user defined info for the template such as i18n strings, the web map id
             // and application id
             // any url parameters and any application specific configuration information.
+            this._toggleIndicatorListener = topic.subscribe("app\toggleIndicator", this._toggleIndicator);
+            this._errorListener = topic.subscribe("app\error", this.reportError);
+
             if (config) {
                 this.config = config;
+                this._checkEditing();
+                // responsive drawer
+                this._drawer = new Drawer({
+                    showDrawerSize: 850, // Pixel size when the drawer is automatically opened
+                    borderContainer: "border_container", // border container node id
+                    contentPaneCenter: "cp_center", // center content pane node id
+                    contentPaneSide: "cp_left", // side content pane id
+                    topbar: "topbar", // toolbar id
+                    toggleButton: "toggle_button", // button node to toggle drawer id
+                    addButton: "add_button", // button node to add button id
+                    direction: this.config.i18n.direction, // i18n direction "ltr" or "rtl"
+                    config: this.config
+                });
+                // startup drawer
+                this._drawer.startup();
 
-                document.title = this.config.i18n.page.title;
+                this.eventAction = new EventAction(this.config);
+                this.eventAction.startup();
+
+
+                this.basemapButton = new BasemapButton(this.config, dojo.byId("basemapDiv"));
+                this.basemapButton.startup();
+
+                this.navigationButtons = new NavigationButtons(this.config, "LocateButton","HomeButton");
+                this.navigationButtons.startup();
+
                 // document ready
                 ready(lang.hitch(this, function () {
                     //supply either the webmap id or, if available, the item info
@@ -79,65 +110,44 @@ define([
         },
         // Map is ready
         _mapLoaded: function () {
-            try {
-                this.common = new Common(this.map, this.config);
-                this.common.checkEditing();
-                this.common.addLocatorButton("locateDiv");
-                this.common.on("locate", lang.hitch(this, this._locate));
-
-                this.common.addGeocoder("searchDiv");
-                this.common.on("select", lang.hitch(this, this._geocodeSelect));
-
-                this.common.addBaseMapGallery("basemapDiv");
-
-
-                this.GPTools = new GPTools(this.map, this.config, this.layers, this.agolPopupClickHandle, this.agolPopupclickEventListener);
-
-                this.GPTools.on("show-busy", lang.hitch(this, this._showBusyIndicator));
-                this.GPTools.on("hide-busy", lang.hitch(this, this._hideBusyIndicator));
-                this.GPTools.startup();
-
-                this.eventAction = new EventAction(this.map, this.config, this.layers);
-                this.eventAction.startup();
-                this.eventAction.findEventFeature();
-
-              
-                this._hideBusyIndicator();
-            }
-            catch (e) {
-                this.reportError(e);
+            topic.publish("app/mapLoaded", this.map);
+          
+            this.eventAction.findEventFeature();
+            // remove loading class from body
+            this._toggleIndicator(false);
+        },
+        _toggleIndicator: function (events) {
+            if (events) {
+                domClass.add(document.body, "app-loading");
+            } else {
+                domClass.remove(document.body, "app-loading");
             }
         },
+        _checkEditing: function () {
+            if (this.config.editingAllowed == null) {
+                this.config.editingAllowed = false;
 
-        _showBusyIndicator: function () {
-            domClass.add(document.body, "app-loading");
-        },
-        _hideBusyIndicator: function () {
-            domClass.remove(document.body, "app-loading");
-        },
-        _geocodeSelect: function (result) {
-            if (result.result != null) {
-                var pt = result.result.feature.geometry;
+                if (this.config == null) {
+                    this.config.editingAllowed = true;
 
-                this._locateOnMap(pt);
+                }
+                if (this.config.userPrivileges == null) {
+                    this.config.editingAllowed = true;
+
+                } else {
+                    for (var key in this.config.userPrivileges) {
+                        if (this.config.userPrivileges[key] == "features:user:edit") {
+                            this.config.editingAllowed = true;
+                            return this.config.editingAllowed;
+
+                        }
+                    }
+                }
+
             }
-        },
-        _locate: function (result) {
-            if (result != null) {
-
-                this._locateOnMap(result);
-
-            }
+            return this.config.editingAllowed;
 
         },
-        _locateOnMap: function(point){
-            this.map.centerAndZoom(point, this.config.locateOptions.zoomLevel);
-            if (this.config.locateOptions.addLocation === true) {
-                this.GPTools.addToMap(point);
-            }
-        },
-        
-
         // create a map based on the input web map id
         _createWebMap: function (itemInfo) {
             arcgisUtils.createMap(itemInfo, "mapDiv", {
@@ -145,7 +155,6 @@ define([
                     // Optionally define additional map config here for example you can
                     // turn the slider off, display info windows, disable wraparound 180, slider position and more.
                 },
-                usePopupManager: true,
                 bingMapsKey: this.config.bingKey
             }).then(lang.hitch(this, function (response) {
                 // Once the map is created we get access to the response which provides important info
@@ -155,11 +164,9 @@ define([
                 // console.log(this.config);
                 this.map = response.map;
 
-                this.agolPopupClickHandle = response.clickEventHandle;
-                this.agolPopupclickEventListener = response.clickEventListener;
+                this.handler = response.clickEventHandle;
 
-                //Added for the service lookup
-                this.layers = response.itemInfo.itemData.operationalLayers;
+                this.map.operationalLayers = response.itemInfo.itemData.operationalLayers;
 
                 // make sure map is loaded
                 if (this.map.loaded) {

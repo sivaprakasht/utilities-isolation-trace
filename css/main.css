@@ -25,7 +25,8 @@ body {
     top: 0;
     left: 0;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.00);
+    background: rgba(0,0,0,.8);
+  
 }
 .app-loading .loading-indicator,
 .app-error .loading-indicator {
@@ -37,8 +38,6 @@ body {
     background-position: center center;
     background-image: url(../images/preloader.gif);
     background-repeat: no-repeat;
-   
-
 }
 .app-error .loading-message {
     /* Error status */
@@ -52,6 +51,6 @@ body {
     top: 40%;
     left: 0;
     text-align: center;
-    background: rgb(255, 255, 255);
+    color:rgb(255, 255, 255);
 
 }

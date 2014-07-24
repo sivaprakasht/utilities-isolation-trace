@@ -1,24 +1,7 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-     <!--
-     | ArcGIS Solutions
-     | Version 10.2
-     | Copyright 2013 Esri
-     |
-     | Licensed under the Apache License, Version 2.0 (the "License");
-     | you may not use this file except in compliance with the License.
-     | You may obtain a copy of the License at
-     |
-     |    http://www.apache.org/licenses/LICENSE-2.0
-     |
-     | Unless required by applicable law or agreed to in writing, software
-     | distributed under the License is distributed on an "AS IS" BASIS,
-     | WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     | See the License for the specific language governing permissions and
-     | limitations under the License.
-    -->
-    <title>Trace</title>
+    <title></title>
     <meta charset="utf-8">
     <!-- Define the versions of IE that will be used to render the page. See Microsoft documentation for details. Optional. -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -31,116 +14,82 @@
     <!-- Use protocol relative urls that way if the browser is viewing the page via HTTPS the js/css file will be requested using the HTTPS protocol -->
     <link rel="stylesheet" href="//js.arcgis.com/3.10/js/dojo/dijit/themes/claro/claro.css">
     <link rel="stylesheet" href="//js.arcgis.com/3.10/js/esri/css/esri.css">
-    <!--Load any application specific styles-->
-    <link rel="stylesheet" href="css/app.css">
+    <!-- Load any application specific styles -->
     <link rel="stylesheet" href="css/gptools.css">
-    <!--<link rel="stylesheet" href="css/editorPopup.css">-->
-    <link rel="stylesheet" type="text/css" href="css/main.css">
-    <link rel="stylesheet" href="css/common.css">
+
+    <link rel="stylesheet" href="css/basemapButton.css">
+    <link rel="stylesheet" type="text/css" href="css/navigationButtons.css" />
+  
+    <link rel="stylesheet" href="css/search.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/Drawer.css">
+    <link rel="stylesheet" type="text/css" href="css/fontello.css" />
+    <!--[if IE 7]><link rel="stylesheet" type="text/css" href="css/fontello-ie7.css" /><![endif]-->
+
 </head>
-
 <body class="claro app-loading">
-    <form method="post" action="" style="height: 0; width: 0; display: none;" class="dlform"
-        id="downloadform" target="_blank">
-        <input type="hidden" name="report" class="ri" id="reportinput" value="" />
-        <input type="hidden" name="filename" class="fn" id="filename" value="" />
+    <div class="loading-indicator">
+        <div class="loading-message" id="loading_message"></div>
+    </div>
+    <!-- The ArcGIS API for JavaScript provides bidirectional support.  When viewing the application in an right to left (rtl) language like Hebrew and Arabic the map needs to remain in left-to-right (ltr) mode. Specify this by setting the dir attribute on the div to ltr. -->
+    <div id="border_container" class="border-container-outer">
+        <div id="cp_left" class="content-pane-left">
+            <div id="border_container_drawer" class="border-container-outer">
+                <div id="cp_top_drawer" class="content-pane-top" data-dojo-type="dijit/layout/ContentPane">
+                    <center>
 
-    </form>
-
-    <div id="appLayout" class="appLayout" data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="design: 'sidebar'">
-        <div class="edgePanelCenter" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region: 'center'">
-            <div class="loading-indicator">
-                <div class="loading-message" id="loading_message"></div>
+                    </center>
+                </div>
+                <div id="cp_ceter_drawer" class="content-pane-center" data-dojo-type="dijit/layout/ContentPane">
+                    <div id="templateDiv"></div>
+                    <div id="editorDiv"></div>
+                </div>
             </div>
-            <div id="searchDiv"></div>
-            <div id="locateDiv"></div>
+
+        </div>
+        <div id="cp_center" class="content-pane-center">
+            <div id="topbar" class="top-bar">
+                <div id="toggle_button" class="hamburger-button"></div>
+
+            </div>
+            <div id="mapButtons" class="map-buttons">
+                <div id="LocateButton"></div>
+                <div id="HomeButton"></div>
+            </div>
             <div id="basemapDiv"></div>
             <div id="mapDiv" dir="ltr"></div>
-
-
-        </div>
-        <div id="toolPane" class="edgePanelTop" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region: 'top'">
-            <div id="toolbarControls" data-dojo-type="dijit/Toolbar" style="background-color: inherit; background-image: none; border-bottom: 0;">
-                <div data-dojo-type="dijit/form/Button" id="tools.add" data-dojo-props="baseClass:'none', iconClass:'addIcon customBigIcon', showLabel:false"></div>
-                <span data-dojo-type="dijit/ToolbarSeparator"></span>
-
-                <div data-dojo-type="dijit/form/Button" id="tools.clear" data-dojo-props="baseClass:'none', iconClass:'clearIcon customBigIcon', showLabel:false"></div>
-                <span data-dojo-type="dijit/ToolbarSeparator"></span>
-
-                <div data-dojo-type="dijit/form/Button" id="tools.run" data-dojo-props="baseClass:'none', iconClass:'runDisabledIcon customBigIcon', showLabel:false"></div>
-                <span data-dojo-type="dijit/ToolbarSeparator"></span>
-
-                <div data-dojo-type="dijit/form/Button" id="tools.save" data-dojo-props="baseClass:'none', iconClass:'saveDisabledIcon customBigIcon', showLabel:false"></div>
-            </div>
-        </div>
-        <div class="edgePanelBottom" id="panelBottomResults" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region: 'bottom'">
-          
-            <div id="stackContainer"></div>
-            <div id="stackControl"></div>
-
         </div>
     </div>
-
-
-    <!-- load dojo -->
     <script type="text/javascript">
-        var package_path = location.pathname.replace(/\/[^/]+$/, '');
+        var package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
         var dojoConfig = {
-            // The locationPath logic below may look confusing but all its doing is 
+            async: true,
+            // The locationPath logic below may look confusing but all its doing is
             // enabling us to load the api from a CDN and load local modules from the correct location.
             packages: [{
                 name: "application",
                 location: package_path + '/js'
-            },
-
-             {
-                 name: "config",
-                 location: package_path + '/config'
-             }, {
-                 name: "arcgis_templates",
-                 location: package_path + '/..'
-             }
-             , {
-                 name: "templateConfig",
-                 location: package_path//package_path.substr(0, package_path.lastIndexOf('/'))
-
-             }
-            ]
+            }, {
+                name: "config",
+                location: package_path + '/config'
+            }, {
+                name: "arcgis_templates",
+                location: package_path + '/..'
+            }]
         };
     </script>
-
     <script type="text/javascript" src="//js.arcgis.com/3.10/"></script>
     <script type="text/javascript">
         require([
             "application/templateOptions",
             "application/template",
             "application/main",
-            "dojo/parser",
-            "dijit/layout/BorderContainer",
-            "dijit/layout/ContentPane",
-            "dijit/layout/StackContainer",
-            "dijit/layout/StackController",
-            "dijit/form/Select",
-            "dijit/form/HorizontalSlider",
-            "dijit/form/HorizontalRuleLabels",
-            "dijit/form/HorizontalRule",
-            "dijit/form/Button",
-            "dijit/form/TextBox",
-            "dijit/Toolbar",
-            "dojo/domReady!",
 
         ], function (
             templateConfig,
             Template,
-            Main,
-            parser) {
-            parser.parse();
-            dojo.addOnLoad(pageReady);
-
-            function pageReady() {
-                esri.config.defaults.io.corsEnabledServers.push("localhost");
-
-            }
+            Main
+        ) {
             // create the template. This will take care of all the logic required for template applications
             var myTemplate = new Template(templateConfig);
             // create my main application. Start placing your logic in the main.js file.
@@ -157,6 +106,5 @@
             });
         });
     </script>
-
 </body>
 </html>

@@ -7,6 +7,7 @@
     "dojo/_base/array",
     "dojo/on",
     "dojo/dom",
+    "dojo/topic",
     "esri/tasks/query"
 ],
 function (
@@ -18,24 +19,38 @@ function (
     array,
     on,
     dom,
+    topic,
     Query
     ) {
     return declare([Evented], {
         map: null,
         config: {},
-        layers: null,
         eventLayer: null,
-        constructor: function (map, config, layers) {
-            this.map = map;
+        constructor: function (config) {
             this.config = config;
-            this.layers = layers;
+            
         },
         startup: function () {
+            this._removeEvents();
+            this._events.push(topic.subscribe("app/mapLoaded", lang.hitch(this, this._mapLoaded)));
+
+          
+        },
+        _removeEvents: function () {
+            if (this._events && this._events.length) {
+                for (var i = 0; i < this._events.length; i++) {
+                    this._events[i].remove();
+                }
+            }
+            this._events = [];
+        },
+        _mapLoaded: function () {
+            this.map = arguments[0];
             this._initEventLayer();
         },
         _initEventLayer: function () {
             if (this.config.eventDetails.layerName !== "") {
-                array.some(this.layers, lang.hitch(this, function (layer) {
+                array.some(this.map.operationalLayers, lang.hitch(this, function (layer) {
 
                     if (layer.title == this.config.eventDetails.layerName) {
                         this.config.eventDetails.EventLayer = layer;

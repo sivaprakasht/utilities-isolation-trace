@@ -39,33 +39,33 @@ function (
             return new Point((startPoint[0] + endPoint[0]) / 2.0, (startPoint[1] + endPoint[1]) / 2.0, polyline.spatialReference);
         },
         findLayer: function (layers, layerName) {
-            var result = null;
+            if (layerName) {
+                array.some(layers, function (layer) {
 
-            array.some(layers, function (layer) {
+                    if (layer.layerObject.layerInfos != null) {
+                        array.forEach(layer.layerObject.layerInfos, function (subLyrs) {
+                            if (layerName == subLyrs.name) {
+                                if (layer.layers != null) {
+                                    array.forEach(layer.layers, function (popUp) {
+                                        if (subLyrs.id == popUp.id) {
+                                            layer.popupInfo = popUp.popupInfo;
+                                        }
+                                    }, this);
+                                }
+                                return layer;
 
-                if (layer.layerObject.layerInfos != null) {
-                    array.forEach(layer.layerObject.layerInfos, function (subLyrs) {
-                        if (layerName == subLyrs.name) {
-                            if (layer.layers != null) {
-                                array.forEach(layer.layers, function (popUp) {
-                                    if (subLyrs.id == popUp.id) {
-                                        layer.popupInfo = popUp.popupInfo;
-                                    }
-                                }, this);
                             }
-                            result = layer;
-                            return true;
-                        }
-                    }, this);
-                } else {
-                    if (layerName == layer.title) {
+                        }, this);
+                    } else {
+                        if (layerName == layer.title) {
 
-                        result = layer;
-                        return true;
+                            return layer;
+
+                        }
                     }
-                }
-            });
-            return result;
+                });
+            }
+            return null;
         },
         createGraphicFromJSON: function (json) {
             //simplemarkersymbol | picturemarkersymbol | simplelinesymbol | cartographiclinesymbol | simplefillsymbol | picturefillsymbol | textsymbol

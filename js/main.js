@@ -50,6 +50,8 @@ define([
             // any url parameters and any application specific configuration information.
             this._toggleIndicatorListener = topic.subscribe("app\toggleIndicator", this._toggleIndicator);
             this._errorListener = topic.subscribe("app\error", this.reportError);
+            topic.subscribe("app/mapLocate", lang.hitch(this, this._mapLocate));
+
 
             if (config) {
                 this.config = config;
@@ -60,21 +62,32 @@ define([
                     borderContainer: "border_container", // border container node id
                     contentPaneCenter: "cp_center", // center content pane node id
                     contentPaneSide: "cp_left", // side content pane id
+                    buttonbar: "buttonbar", // toolbar id
                     topbar: "topbar", // toolbar id
-                    toggleButton: "toggle_button", // button node to toggle drawer id
-                    addButton: "add_button", // button node to add button id
-                    direction: this.config.i18n.direction, // i18n direction "ltr" or "rtl"
                     config: this.config
                 });
                 // startup drawer
                 this._drawer.startup();
 
-                this.eventAction = new EventAction(this.config);
-                this.eventAction.startup();
+             
+                if (this.config.eventDetails) {
+                    this.eventAction = new EventAction({
+                        layerName: this.config.eventDetails.layerName,
+                        whereClause: this.config.eventDetails.whereClause,
+                        eventID: this.config.eventID,
+                        zoomScale: this.config.eventDetails.zoomScale
+                    });
+                    this.eventAction.startup();
 
-
-                this.basemapButton = new BasemapButton(this.config, dojo.byId("basemapDiv"));
+                }
+                
+                this.basemapButton = new BasemapButton(
+                    {
+                        basemapGalleryGroupQuery: this.config.orgInfo.basemapGalleryGroupQuery,
+                        domNode: "basemapDiv"
+                    });
                 this.basemapButton.startup();
+
 
                 var zoomScale = 16;
                 if (this.config != null)
@@ -88,9 +101,9 @@ define([
                     }
                 }
                 this.navigationButtons = new NavigationButtons({
-                    homeID: "HomeButton", // Pixel size when the drawer is automatically opened
-                    locateID: "LocateButton",
-                    zoomScale: zoomScale
+                    zoomScale: zoomScale,
+                    domNode: "mapButtons"
+
                 });
                 this.navigationButtons.startup();
 
@@ -126,10 +139,14 @@ define([
         // Map is ready
         _mapLoaded: function () {
             topic.publish("app/mapLoaded", this.map);
-          
-            this.eventAction.findEventFeature();
+            
             // remove loading class from body
             this._toggleIndicator(false);
+        },
+        _mapLocate: function () {
+            
+            this.map.centerAt(arguments[0]);
+            
         },
         _toggleIndicator: function (events) {
             if (events) {

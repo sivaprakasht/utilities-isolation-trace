@@ -8,7 +8,9 @@
     "dojo/on",
     "dojo/dom",
     "dojo/topic",
-    "esri/tasks/query"
+    "esri/tasks/query",
+    "dojo/i18n!application/nls/resources",
+    "application/functions"
 ],
 function (
     Evented,
@@ -20,21 +22,32 @@ function (
     on,
     dom,
     topic,
-    Query
+    Query,
+    i18n,
+    Functions
     ) {
     return declare([Evented], {
-        map: null,
-        config: {},
-        eventLayer: null,
-        constructor: function (config) {
-            this.config = config;
-            
+        options: {
+            layerName: null,
+            whereClause: null,
+            eventID: null,
+            zoomScale: 16
+        },
+        constructor: function (options) {
+            // mix in settings and defaults
+            var defaults = lang.mixin({}, this.options, options);
+            this._i18n = i18n;
+            this.layerName = defaults.layerName;
+            this.whereClause = defaults.whereClause;
+            this.eventID = defaults.eventID;
+            this.zoomScale = defaults.zoomScale;
+            this._helperFunctions = new Functions();
         },
         startup: function () {
             this._removeEvents();
             this._events.push(topic.subscribe("app/mapLoaded", lang.hitch(this, this._mapLoaded)));
 
-          
+
         },
         _removeEvents: function () {
             if (this._events && this._events.length) {
@@ -46,37 +59,24 @@ function (
         },
         _mapLoaded: function () {
             this.map = arguments[0];
-            this._initEventLayer();
-        },
-        _initEventLayer: function () {
-            if (this.config.eventDetails.layerName !== "") {
-                array.some(this.map.operationalLayers, lang.hitch(this, function (layer) {
+            if (this.eventID != null) {
+                this._eventLayer = this._helperFunctions.findLayer(this.map.operationalLayers, this.layerName);
 
-                    if (layer.title == this.config.eventDetails.layerName) {
-                        this.config.eventDetails.EventLayer = layer;
-                        console.log("Event Layer found: " + this.config.eventDetails.layerName);
-                        return false;
-                    }
+                if (this._eventLayer != null) {
 
-                }));
-            }
-        },
-        findEventFeature: function () {
-            if (this.config.eventDetails.EventLayer != null) {
-                if (this.config.EventID != null) {
                     var query = new Query();
-                    query.where = lang.replace(this.config.eventDetails.whereClause,this.config);
-                    //query.outFields = "";//["*"];
+                    query.where = lang.replace(this.whereClause, this.config);
+                    if (this._eventLayer.layerObject) {
+                        this._eventLayer.layerObject.queryFeatures(query, lang.hitch(this, function (featureSet) {
 
-                    this.config.eventDetails.EventLayer.layerObject.queryFeatures(query, lang.hitch(this, function (featureSet) {
+                            if (featureSet.features.length >= 1) {
 
-                        if (featureSet.features.length >= 1) {
-                            
-                            this.map.centerAndZoom(featureSet.features[0].geometry, this.config.eventDetails.zoomScale);
-                            this.emit("EventFeature", featureSet.features[0]);
-                            
-                        }
-                    }));
+                                this.map.centerAndZoom(featureSet.features[0].geometry, this.zoomScale);
+                                this.emit("EventFeature", featureSet.features[0]);
+
+                            }
+                        }));
+                    }
                 }
             }
         }

@@ -60,7 +60,7 @@ define({
     },
     "eventDetails": {
         "layerName": "Leak Report",
-        "whereClause": "OBJECTID = {EventID}",
+        "whereClause": "OBJECTID = {eventID}",
         "zoomScale": 18
     },
     "geoprocessing": {

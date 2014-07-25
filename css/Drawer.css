@@ -11,6 +11,11 @@
     background: rgba(102,102,102,0.80);
     height: 48px;
     border-bottom: 1px solid #ddd;
+    
+}
+.button-bar {
+     width: 300px;
+     z-index: 5;
 }
 .esriRTL .top-bar {
     left: auto;
@@ -41,8 +46,8 @@
     overflow: hidden;
 }
 .content-pane-left {
-    width: 0;
-    max-width: 400px;
+    width:0px;
+    max-width: 300px;
     height: 100%;
     padding: 0;
     margin: 0;
@@ -58,10 +63,10 @@
     transition: width 250ms ease;
 }
 .app-loading .content-pane-left {
-    width: 400px;
+    width: 300px;
 }
 .drawer-open .content-pane-left {
-    width: 400px;
+    width: 300px;
     overflow: auto;
     overflow-x: hidden;
     border-right: 1px solid #ddd;
@@ -84,3 +89,111 @@
     .app-loading .content-pane-left {
         width: 0;
     }
+}
+
+
+/* Controls */
+.add-button {
+    float: left;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    height: 48px;
+    width: 48px;
+    background: url(../images/add.png) no-repeat center center;
+    overflow:hidden;
+}
+.esriRTL .add-button {
+    float: right;
+}
+.add-button-selected {
+    float: left;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    height: 48px;
+    width: 48px;
+    background: url(../images/add-selected.png) no-repeat center center;
+    overflow:hidden;
+}
+.esriRTL .add-button-selected {
+    float: right;
+}
+
+.delete-button {
+
+    float: left;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    height: 48px;
+    width: 48px;
+    background: url(../images/erase.png) no-repeat center center;
+    overflow:hidden;
+}
+.esriRTL .delete-button {
+    float: right;
+}
+
+.run-button {
+    float: left;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    height: 48px;
+    width: 48px;
+    background: url(../images/run.png) no-repeat center center;
+    overflow:hidden;
+}
+.esriRTL .run-button {
+    float: right;
+}
+.run-button-disabled {
+    float: left;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    height: 48px;
+    width: 48px;
+    background: url(../images/runDisabled.png) no-repeat center center;
+}
+.esriRTL .run-button-disabled {
+    float: right;
+}
+
+.save-button {
+    float: left;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    height: 48px;
+    width: 48px;
+    background: url(../images/upload.png) no-repeat center center;
+}
+.esriRTL .save-button {
+    float: right;
+}
+.save-button-disabled {
+    float: left;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    height: 48px;
+    width: 48px;
+    background: url(../images/uploadDisabled.png) no-repeat center center;
+}
+.esriRTL .save-button-disabled {
+    float: right;
+}
+.save-button-processing {
+    float: left;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    height: 48px;
+    width: 48px;
+    background: url(../images/locate-spinner.gif) no-repeat center center;
+}
+.esriRTL .save-button-processing {
+    float: right;
+}

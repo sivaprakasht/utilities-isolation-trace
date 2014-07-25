@@ -9,7 +9,8 @@
     "esri",
     "esri/dijit/Geocoder",
     "dojo/dom",
-    "dojo/topic"
+    "dojo/topic",
+    "dojo/i18n!application/nls/resources"
 ],
 function (
     Evented,
@@ -22,15 +23,25 @@ function (
     esri,
     Geocoder,
     dom,
-    topic
+    topic,
+    i18n
     ) {
     return declare([Evented], {
-        map: null,
-        config: {},
-        domNode: null,
-        constructor: function (config, domNode) {
-            this.config = config;
-            this.domNode = domNode;
+
+        options: {
+            domNode: null,
+            geocode: null
+        },
+        constructor: function (options) {
+            // mix in settings and defaults
+            var defaults = lang.mixin({}, this.options, options);
+            // properties
+            // widget node
+
+            this._i18n = i18n;
+
+            this.geocode = defaults.geocode;
+            this.domNode = defaults.domNode;
         },
         // start widget. called by user
         startup: function () {
@@ -69,20 +80,20 @@ function (
             dojo.addClass(this.domNode, "searchControl");
         },
         _createGeocoderOptions: function () {
-            if (this.config.helperServices === null) { return null; }
-            if (this.config.helperServices.geocode === null) { return null; }
-            var options, geocoders = lang.clone(this.config.helperServices.geocode);
+            
+            if (this.geocode === null) { return null; }
+            var options, geocoders = lang.clone(this.geocode);
             // each geocoder
             if (geocoders.length === 0) { return null; }
 
             array.forEach(geocoders, function (geocoder) {
                 if (geocoder.url.indexOf(".arcgis.com/arcgis/rest/services/World/GeocodeServer") > -1) {
                     geocoder.placefinding = true;
-                    if (this.config.i18n) {
-                        if (this.config.i18n.geocoder) {
-                            if (this.config.i18n.geocoder.defaultText) {
+                    if (this.i18n) {
+                        if (this.i18n.geocoder) {
+                            if (this.i18n.geocoder.defaultText) {
 
-                                geocoder.placeholder = this.config.i18n.geocoder.defaultText;
+                                geocoder.placeholder = this.i18n.geocoder.defaultText;
 
                             }
                         }
@@ -116,9 +127,8 @@ function (
 
         },
         _showLocation: function (evt) {
-            topic.publish("app/mapLocate", evt);
-         
 
+            topic.publish("app/mapLocate", evt.result.feature.geometry);
         },
 
         

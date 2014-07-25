@@ -4,6 +4,7 @@
     "dojo/ready",
     "dojo/_base/declare",
     "dojo/_base/lang",
+
     "dojo/_base/array",
     "dojo/on",
     "dijit/layout/ContentPane",
@@ -11,7 +12,8 @@
     "esri",
     "esri/dijit/BasemapGallery",
     "dojo/dom",
-    "dojo/topic"
+    "dojo/topic",
+    "dojo/i18n!application/nls/resources"
 ],
 function (
     Evented,
@@ -26,15 +28,23 @@ function (
     esri,
     BasemapGallery,
     dom,
-    topic
+    topic,
+    i18n
     ) {
     return declare([Evented], {
-        map: null,
-        config: {},
-        domNode: null,
-        constructor: function (config, domNode) {
-            this.config = config;
-            this.domNode = domNode;
+        options: {
+            basemapGalleryGroupQuery: null,
+            domNode: null
+        },
+        constructor: function (options) {
+            // mix in settings and defaults
+            var defaults = lang.mixin({}, this.options, options);
+            this._i18n = i18n;
+
+
+            this.basemapGalleryGroupQuery = defaults.basemapGalleryGroupQuery;
+            this.domNode = defaults.domNode;
+
         },
         // start widget. called by user
         startup: function () {
@@ -59,49 +69,52 @@ function (
                 }
             }
             this._events = [];
-        },    
+        },
         _addBaseMapGallery: function () {
-            var title = "Switch Basemap";
-            if (this.config.i18n) {
-                if (this.config.i18n.ui) {
-                    if (this.config.i18n.ui.basemapButton) {
+            this._basemapGallery = dojo.byId(this.domNode);
+            if (this._basemapGallery) {
+                var title = "Switch Basemap";
+                if (this._i18n) {
+                    if (this._i18n.ui) {
+                        if (this._i18n.ui.basemapButton) {
 
-                        title = this.config.i18n.ui.basemapButton;
+                            title = this._i18n.ui.basemapButton;
 
+                        }
                     }
                 }
+
+                dojo.addClass(this._basemapGallery, "basemapButton");
+
+                var tp = new TitlePane({ title: title, closable: false, open: false });
+
+                this._basemapGallery.appendChild(tp.domNode);
+
+                tp.startup();
+                var cp = new ContentPane({
+                    content: "<div id='basemapContent'>Switch Basemap</div>",
+                    style: "width: 380px; height: 280px; overflow: auto;"
+                }).placeAt(tp.containerNode);
+                cp.startup();
+
+                if (this.basemapGalleryGroupQuery) {
+                    this.basemapGallery = new BasemapGallery({
+                        basemap: this.basemapGalleryGroupQuery,
+                        map: this.map
+                    }, "basemapContent");
+                } else {
+                    this.basemapGallery = new BasemapGallery({
+                        showArcGISBasemaps: true,
+                        map: this.map
+                    }, "basemapContent");
+                }
+
+                this.basemapGallery.startup();
+
+                this.basemapGallery.on("error", function (msg) {
+                    console.log("basemap gallery error:  ", msg);
+                });
             }
-
-            dojo.addClass(this.domNode, "basemapButton");
-
-            var tp = new TitlePane({ title: title, closable: false, open: false });
-
-            this.domNode.appendChild(tp.domNode);
-
-            tp.startup();
-            var cp = new ContentPane({
-                content: "<div id='basemapContent'>Switch Basemap</div>",
-                style: "width: 380px; height: 280px; overflow: auto;"
-            }).placeAt(tp.containerNode);
-            cp.startup();
-
-            if (this.config.basemapGalleryGroupQuery) {
-                this.basemapGallery = new BasemapGallery({
-                    basemap: this.config.basemapGalleryGroupQuery,
-                    map: this.map
-                }, "basemapContent");
-            } else {
-                this.basemapGallery = new BasemapGallery({
-                    showArcGISBasemaps: true,
-                    map: this.map
-                }, "basemapContent");
-            }
-
-            this.basemapGallery.startup();
-
-            this.basemapGallery.on("error", function (msg) {
-                console.log("basemap gallery error:  ", msg);
-            });
         },
 
     });

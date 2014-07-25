@@ -1,6 +1,5 @@
 ﻿define([
     "dojo/Evented",
-    "dijit/_WidgetBase",
     "dojo",
     "dojo/ready",
     "dojo/_base/declare",
@@ -11,12 +10,13 @@
     "esri/dijit/HomeButton",
     "esri/dijit/LocateButton",
     "dojo/dom",
+    "dojo/dom-construct",
     "dojo/topic",
-    "esri/geometry"
+    "esri/geometry",
+    "dojo/i18n!application/nls/resources"
 ],
 function (
     Evented,
-    _WidgetBase,
     dojo,
     ready,
     declare,
@@ -27,25 +27,26 @@ function (
     HomeButton,
     LocateButton,
     dom,
+    domConstruct,
     topic,
-    Geometry
+    Geometry,
+    i18n
     ) {
-    return declare([_WidgetBase, Evented], {
+    var Widget = declare([Evented], {
+
         options: {
-            toolbar: null,
-            direction: "ltr",
-            map: null,
-            homeID: null,
-            locateID: null,
             zoomScale: 16
         },
         constructor: function (options) {
             // mix in settings and defaults
             var defaults = lang.mixin({}, this.options, options);
+            this.domNode = defaults.domNode;
+            this._i18n = i18n;
+            this.zoomScale = defaults.zoomScale;
 
-            this.set("homeID", defaults.homeID);
-            this.set("locateID", defaults.locateID);
-            this.set("zoomScale", defaults.zoomScale);
+        },
+        postCreate: function () {
+
         },
         // start widget. called by user
         startup: function () {
@@ -58,11 +59,20 @@ function (
         _init: function () {
             this._removeEvents();
             this._events.push(topic.subscribe("app/mapLoaded", lang.hitch(this, this._mapLoaded)));
+            this._mapButtons = dojo.byId(this.domNode);
+            if (this._mapButtons) {
+                this._homeNode = domConstruct.place("<div id='HomeButton' ></div>", this._mapButtons);
+                this._locateNode = domConstruct.place("<div id='LocateButton' ></div>", this._mapButtons);
+            }
         },
         _mapLoaded: function () {
-            this.set("map",arguments[0]);
-            this._addLocatorButton();
-            this._addHomeButton();
+            this.map = arguments[0];
+            if (this._locateNode) {
+                this._addLocatorButton();
+            }
+            if (this._homeNode) {
+                this._addHomeButton();
+            }
         },
         _removeEvents: function () {
             if (this._events && this._events.length) {
@@ -71,7 +81,7 @@ function (
                 }
             }
             this._events = [];
-        },    
+        },
         _addLocatorButton: function () {
 
             this._LocateButtonLight = new LocateButton({
@@ -81,12 +91,12 @@ function (
                 highlightLocation: false,
                 setScale: false,
                 theme: "LocateButtonLight"
-            }, this.get("locateID"));
+            }, this._locateNode);
 
             on(this._LocateButtonLight, "locate", lang.hitch(this, this._locate));
 
             this._LocateButtonLight.startup();
-            
+
 
         },
         _addHomeButton: function () {
@@ -94,7 +104,7 @@ function (
             this._HomeButtonLight = new HomeButton({
                 map: this.map,
                 theme: "HomeButtonLight"
-            }, this.get("homeID"));
+            }, this._homeNode);
 
             on(this._HomeButtonLight, 'home', lang.hitch(this, function () {
                 if (this._LocateButtonLight) {
@@ -103,7 +113,7 @@ function (
             }));
 
             this._HomeButtonLight.startup();
-            
+
 
         },
         _locate: function (location) {
@@ -114,7 +124,7 @@ function (
 
             } else {
                 var point = new Geometry.Point({ "x": location.position.coords.longitude, "y": location.position.coords.latitude, " spatialReference": { " wkid": 4326 } });
-            
+
                 this.map.centerAndZoom(point, this.get("zoomScale"));;
 
                 topic.publish("app/mapLocate", point);
@@ -125,9 +135,10 @@ function (
                 //        this.GPTools.addToMap(point);
                 //    }
                 //},
-        
+
             }
 
         }
     });
+    return Widget;
 });

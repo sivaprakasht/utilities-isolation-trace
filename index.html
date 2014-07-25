@@ -23,9 +23,7 @@
     <link rel="stylesheet" href="css/search.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" type="text/css" href="css/Drawer.css">
-    <link rel="stylesheet" type="text/css" href="css/fontello.css" />
-    <!--[if IE 7]><link rel="stylesheet" type="text/css" href="css/fontello-ie7.css" /><![endif]-->
-
+    
 </head>
 <body class="claro app-loading">
     <div class="loading-indicator">
@@ -75,7 +73,12 @@
             }, {
                 name: "arcgis_templates",
                 location: package_path + '/..'
-            }]
+            }, {
+                name: "templateConfig",
+                location: package_path//package_path.substr(0, package_path.lastIndexOf('/'))
+
+            }
+            ]
         };
     </script>
     <script type="text/javascript" src="//js.arcgis.com/3.10/"></script>

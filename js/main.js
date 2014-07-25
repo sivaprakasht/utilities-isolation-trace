@@ -76,7 +76,22 @@ define([
                 this.basemapButton = new BasemapButton(this.config, dojo.byId("basemapDiv"));
                 this.basemapButton.startup();
 
-                this.navigationButtons = new NavigationButtons(this.config, "LocateButton","HomeButton");
+                var zoomScale = 16;
+                if (this.config != null)
+                {
+                    if (this.config.locateOptions != null)
+                    {
+                        if (this.config.locateOptions.zoomLevel != null)
+                        {
+                            zoomScale = this.config.locateOptions.zoomLevel;
+                        }
+                    }
+                }
+                this.navigationButtons = new NavigationButtons({
+                    homeID: "HomeButton", // Pixel size when the drawer is automatically opened
+                    locateID: "LocateButton",
+                    zoomScale: zoomScale
+                });
                 this.navigationButtons.startup();
 
                 // document ready
@@ -150,6 +165,22 @@ define([
         },
         // create a map based on the input web map id
         _createWebMap: function (itemInfo) {
+            if (this.config.extent) {
+                var e = this.config.extent.split(',');
+                if (e.length === 4) {
+                    itemInfo.item.extent = [
+                        [
+                            parseFloat(e[0]),
+                            parseFloat(e[1])
+                        ],
+                        [
+                            parseFloat(e[2]),
+                            parseFloat(e[3])
+                        ]
+                    ];
+                }
+            }
+
             arcgisUtils.createMap(itemInfo, "mapDiv", {
                 mapOptions: {
                     // Optionally define additional map config here for example you can

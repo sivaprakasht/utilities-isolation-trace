@@ -1,5 +1,6 @@
 ﻿define([
     "dojo/Evented",
+    "dijit/_WidgetBase",
     "dojo",
     "dojo/ready",
     "dojo/_base/declare",
@@ -10,10 +11,12 @@
     "esri/dijit/HomeButton",
     "esri/dijit/LocateButton",
     "dojo/dom",
-    "dojo/topic"
+    "dojo/topic",
+    "esri/geometry"
 ],
 function (
     Evented,
+    _WidgetBase,
     dojo,
     ready,
     declare,
@@ -24,16 +27,25 @@ function (
     HomeButton,
     LocateButton,
     dom,
-    topic
+    topic,
+    Geometry
     ) {
-    return declare([Evented], {
-        map: null,
-        config: {},
-        domNode: null,
-        constructor: function (config, homeID,locateID) {
-            this.config = config;
-            this.homeID = homeID;
-            this.locateID = locateID;
+    return declare([_WidgetBase, Evented], {
+        options: {
+            toolbar: null,
+            direction: "ltr",
+            map: null,
+            homeID: null,
+            locateID: null,
+            zoomScale: 16
+        },
+        constructor: function (options) {
+            // mix in settings and defaults
+            var defaults = lang.mixin({}, this.options, options);
+
+            this.set("homeID", defaults.homeID);
+            this.set("locateID", defaults.locateID);
+            this.set("zoomScale", defaults.zoomScale);
         },
         // start widget. called by user
         startup: function () {
@@ -48,7 +60,7 @@ function (
             this._events.push(topic.subscribe("app/mapLoaded", lang.hitch(this, this._mapLoaded)));
         },
         _mapLoaded: function () {
-            this.map = arguments[0];
+            this.set("map",arguments[0]);
             this._addLocatorButton();
             this._addHomeButton();
         },
@@ -62,49 +74,48 @@ function (
         },    
         _addLocatorButton: function () {
 
-            this.locateButton = new LocateButton({
+            this._LocateButtonLight = new LocateButton({
                 map: this.map,
                 pointerGraphic: null,
                 centerAt: false,
                 highlightLocation: false,
                 setScale: false,
-                theme: "LocateButtonCalcite"
-            }, this.locateID);
+                theme: "LocateButtonLight"
+            }, this.get("locateID"));
 
-            on(this.locateButton, "locate", lang.hitch(this, this._locate));
+            on(this._LocateButtonLight, "locate", lang.hitch(this, this._locate));
 
-            this.locateButton.startup();
-            //dojo.addClass(this.homeID, "LocateButtonCalcite");
+            this._LocateButtonLight.startup();
+            
 
         },
         _addHomeButton: function () {
 
-            this.homeButton = new HomeButton({
+            this._HomeButtonLight = new HomeButton({
                 map: this.map,
-                theme: "HomeButtonCalcite"
-            }, this.homeID);
+                theme: "HomeButtonLight"
+            }, this.get("homeID"));
 
-            on(this.homeButton, 'home', lang.hitch(this, function () {
-                if (this.locateButton) {
-                    this.locateButton.clear();
+            on(this._HomeButtonLight, 'home', lang.hitch(this, function () {
+                if (this._LocateButtonLight) {
+                    this._LocateButtonLight.clear();
                 }
             }));
 
-            this.homeButton.startup();
-            //dojo.addClass(dom.byId(divID), "HomeButtonCalcite");
+            this._HomeButtonLight.startup();
+            
 
         },
         _locate: function (location) {
-            this.locateButton.clear();
+            this._LocateButtonLight.clear();
 
             if (location.error != null) {
                 alert(location.error);
 
             } else {
                 var point = new Geometry.Point({ "x": location.position.coords.longitude, "y": location.position.coords.latitude, " spatialReference": { " wkid": 4326 } });
-                alert(location.position.coords.longitude);
-
-                this.map.centerAndZoom(point, this.config.locateOptions.zoomLevel);
+            
+                this.map.centerAndZoom(point, this.get("zoomScale"));;
 
                 topic.publish("app/mapLocate", point);
 

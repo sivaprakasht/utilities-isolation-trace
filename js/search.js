@@ -68,7 +68,7 @@ function (
                 }
             }
             this._events = [];
-        },    
+        },
         _addGeocoder: function () {
             var gcOpts = this._createGeocoderOptions();
             this.geocoder = new Geocoder(gcOpts, this.domNode);
@@ -80,7 +80,7 @@ function (
             dojo.addClass(this.domNode, "searchControl");
         },
         _createGeocoderOptions: function () {
-            
+
             if (this.geocode === null) { return null; }
             var options, geocoders = lang.clone(this.geocode);
             // each geocoder
@@ -131,6 +131,6 @@ function (
             topic.publish("app/mapLocate", evt.result.feature.geometry);
         },
 
-        
+
     });
 });

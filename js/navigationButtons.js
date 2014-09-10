@@ -97,7 +97,6 @@ function (
 
             this._LocateButtonLight.startup();
 
-
         },
         _addHomeButton: function () {
 
@@ -106,14 +105,13 @@ function (
                 theme: "HomeButtonLight"
             }, this._homeNode);
 
-            on(this._HomeButtonLight, 'home', lang.hitch(this, function () {
+            on(this._HomeButtonLight, "home", lang.hitch(this, function () {
                 if (this._LocateButtonLight) {
                     this._LocateButtonLight.clear();
                 }
             }));
 
             this._HomeButtonLight.startup();
-
 
         },
         _locate: function (location) {
@@ -125,16 +123,9 @@ function (
             } else {
                 var point = new Geometry.Point({ "x": location.position.coords.longitude, "y": location.position.coords.latitude, " spatialReference": { " wkid": 4326 } });
 
-                this.map.centerAndZoom(point, this.get("zoomScale"));;
+                this.map.centerAndZoom(point, this.zoomScale);
 
                 topic.publish("app/mapLocate", point);
-
-                //_locateOnMap: function(point){
-                //    this.map.centerAndZoom(point, this.config.locateOptions.zoomLevel);
-                //    if (this.config.locateOptions.addLocation === true) {
-                //        this.GPTools.addToMap(point);
-                //    }
-                //},
 
             }
 

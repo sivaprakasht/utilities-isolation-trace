@@ -60,7 +60,7 @@ function (
         _mapLoaded: function () {
             this.map = arguments[0];
             if (this.eventID != null) {
-                this._eventLayer = this._helperFunctions.findLayer(this.map.operationalLayers, this.layerName);
+                this._eventLayer = this._helperFunctions.findLayer(this.config.itemInfo.itemData.operationalLayers, this.layerName);
 
                 if (this._eventLayer != null) {
 

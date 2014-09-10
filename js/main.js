@@ -84,7 +84,8 @@ define([
                 this.basemapButton = new BasemapButton(
                     {
                         basemapGalleryGroupQuery: this.config.orgInfo.basemapGalleryGroupQuery,
-                        domNode: "basemapDiv"
+                        domNode: "basemapDiv",
+                        config: this.config
                     });
                 this.basemapButton.startup();
 
@@ -203,6 +204,7 @@ define([
                     // Optionally define additional map config here for example you can
                     // turn the slider off, display info windows, disable wraparound 180, slider position and more.
                 },
+                usePopupManager: true,
                 bingMapsKey: this.config.bingKey
             }).then(lang.hitch(this, function (response) {
                 // Once the map is created we get access to the response which provides important info
@@ -214,8 +216,7 @@ define([
 
                 this.handler = response.clickEventHandle;
 
-                this.map.operationalLayers = response.itemInfo.itemData.operationalLayers;
-
+              
                 // make sure map is loaded
                 if (this.map.loaded) {
                     // do something with the map

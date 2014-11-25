@@ -57,5 +57,5 @@ limitations under the License.
 
 A copy of the license is available in the repository's [license.txt](https://github.com/esri/utilities-isolation-trace/blob/master/License.txt) file.
 
-[](Esri Tags: ArcGIS Web Mapping Service Public Utilities)
+[](Esri Tags: ArcGIS Web Mapping Service Public Utilities ArcGISSolutions)
 [](Esri Language: JavaScript)​
